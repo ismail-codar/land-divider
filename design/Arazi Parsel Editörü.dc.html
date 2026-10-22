@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&amp;display=swap">
+<style>body{margin:0;background:#f3f2f2}*,*::before,*::after{box-sizing:border-box}a{color:#ae1800;text-underline-offset:3px}a:hover{color:#ec3013}</style>
+</helmet>
+<div style="font-family:Archivo,system-ui,sans-serif;color:#201e1d;background:#f3f2f2;font-size:15px;line-height:1.55;padding:0 0 120px">
+
+  <header style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:0;border-bottom:2px solid rgba(32,30,29,0.4)">
+    <div style="padding:40px 40px 32px;display:flex;flex-direction:column;gap:12px;grid-column:span 2">
+      <div style="font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#ae1800">Ürün tasarımı · v1 · mobil öncelikli</div>
+      <h1 style="margin:0;font-size:44px;font-weight:800;line-height:1.05;letter-spacing:-0.015em">Arazi Parsel Editörü</h1>
+      <p style="margin:0;max-width:640px;text-wrap:pretty">Bir ana arazi sınırı içinde parselleri oluşturmak ve sınırlarını dokunarak düzenlemek için harita merkezli editör. Aşağıdaki telefon çerçeveleri gerçek etkileşimlidir: köşe ve sınır sürükleme, bölme, birleştirme, geri alma ve 2D/3D geçişi çalışır.</p>
+    </div>
+    <nav style="padding:40px;display:flex;flex-direction:column;gap:0;border-left:2px solid rgba(32,30,29,0.4);font-size:14px">
+      <a href="#s1" style="padding:6px 0;border-bottom:1px solid rgba(32,30,29,0.25);text-decoration:none;color:#201e1d">01 Etkileşimli prototip</a>
+      <a href="#s2" style="padding:6px 0;border-bottom:1px solid rgba(32,30,29,0.25);text-decoration:none;color:#201e1d">02 Ekranlar ve durumlar</a>
+      <a href="#s3" style="padding:6px 0;border-bottom:1px solid rgba(32,30,29,0.25);text-decoration:none;color:#201e1d">03 Kullanıcı akışları</a>
+      <a href="#s4" style="padding:6px 0;border-bottom:1px solid rgba(32,30,29,0.25);text-decoration:none;color:#201e1d">04 Tablet ve masaüstü</a>
+      <a href="#s5" style="padding:6px 0;border-bottom:1px solid rgba(32,30,29,0.25);text-decoration:none;color:#201e1d">05 Bilgi mimarisi</a>
+      <a href="#s6" style="padding:6px 0;border-bottom:1px solid rgba(32,30,29,0.25);text-decoration:none;color:#201e1d">06 Etkileşim kuralları</a>
+      <a href="#s7" style="padding:6px 0;border-bottom:1px solid rgba(32,30,29,0.25);text-decoration:none;color:#201e1d">07 Tasarım tokenları</a>
+      <a href="#s8" style="padding:6px 0;text-decoration:none;color:#201e1d">08 Kritik UX kararları</a>
+    </nav>
+  </header>
+
+  <section id="s1" data-screen-label="01 Prototip" style="padding:48px 40px;border-bottom:2px solid rgba(32,30,29,0.4);display:flex;flex-wrap:wrap;gap:56px;align-items:flex-start">
+    <div style="position:relative;width:390px;height:844px;flex:none;border-radius:48px;overflow:hidden;box-shadow:0 0 0 10px #201e1d,0 24px 48px -16px rgba(45,43,43,0.4);margin:10px">
+      <dc-import name="ParselEditor" device="phone" scenario="idle" hint-size="390px,844px" style="position:absolute;inset:0"></dc-import>
+    </div>
+    <div style="flex:1;min-width:300px;max-width:560px;display:flex;flex-direction:column;gap:24px">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#ae1800">01</div>
+        <h2 style="margin:0;font-size:32px;font-weight:800;line-height:1.1">Etkileşimli mobil prototip</h2>
+        <p style="margin:0;text-wrap:pretty">9 parselli örnek arazi, 18.500 m². Fare ile tek parmak, trackpad pinch (ya da Ctrl + tekerlek) ile iki parmak davranışı denenebilir. Dokunmatik cihazda gerçek pinch çalışır.</p>
+      </div>
+      <div style="display:flex;flex-direction:column;border-top:2px solid rgba(32,30,29,0.4)">
+        <div style="display:grid;grid-template-columns:120px 1fr;gap:16px;padding:12px 0;border-bottom:1px solid rgba(32,30,29,0.25)"><strong>Seç</strong><span>Parsele, sınıra ya da köşeye dokunun. Öncelik köşe → sınır → parsel. Boş alanda sürükleme haritayı kaydırır.</span></div>
+        <div style="display:grid;grid-template-columns:120px 1fr;gap:16px;padding:12px 0;border-bottom:1px solid rgba(32,30,29,0.25)"><strong>Köşe sürükle</strong><span>İç köşeyi tutup taşıyın; komşu parsellerin alan farkı etiketlerde canlı görünür. Dış sınırdaki köşeler sınır boyunca kayar.</span></div>
+        <div style="display:grid;grid-template-columns:120px 1fr;gap:16px;padding:12px 0;border-bottom:1px solid rgba(32,30,29,0.25)"><strong>Sınır sürükle</strong><span>İç sınırı tutun; kendi eksenine dik yönde taşınır. Seçili sınırın ortasındaki tutamaç ince çizgiyi yakalamayı kolaylaştırır.</span></div>
+        <div style="display:grid;grid-template-columns:120px 1fr;gap:16px;padding:12px 0;border-bottom:1px solid rgba(32,30,29,0.25)"><strong>Geçersiz hareket</strong><span>Bir köşeyi karşı sınırın ötesine çekin: gerçek köşe son geçerli yerde kalır, parmağı hayalet köşe izler, kısa bir uyarı çıkar.</span></div>
+        <div style="display:grid;grid-template-columns:120px 1fr;gap:16px;padding:12px 0;border-bottom:1px solid rgba(32,30,29,0.25)"><strong>Böl</strong><span>Parsel seçin → Böl → iki sınır noktası. Noktalar en yakın sınıra yapışır ve sürüklenebilir. Önizleme yeni alanları gösterir.</span></div>
+        <div style="display:grid;grid-template-columns:120px 1fr;gap:16px;padding:12px 0;border-bottom:1px solid rgba(32,30,29,0.25)"><strong>Birleştir</strong><span>Ortak sınırı seçin → Parselleri Birleştir → onay. Geri alınabilir.</span></div>
+        <div style="display:grid;grid-template-columns:120px 1fr;gap:16px;padding:12px 0;border-bottom:1px solid rgba(32,30,29,0.25)"><strong>Köşe ekle</strong><span>Köşe aracında sınıra dokunun ya da sınır seçip "Köşe ekle" ile tutamacı konumlandırın.</span></div>
+        <div style="display:grid;grid-template-columns:120px 1fr;gap:16px;padding:12px 0;border-bottom:1px solid rgba(32,30,29,0.25)"><strong>Alt sayfa</strong><span>Tutamacı sürükleyin ya da başlığa dokunun: kapalı → yarım → açık.</span></div>
+        <div style="display:grid;grid-template-columns:120px 1fr;gap:16px;padding:12px 0"><strong>2D / 3D</strong><span>Sağ üstteki anahtar. 3D’de sürükleme yörünge döndürür, seçim korunur; düzenleme 2D’de yapılır.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="s2" style="padding:48px 40px;border-bottom:2px solid rgba(32,30,29,0.4);display:flex;flex-direction:column;gap:32px">
+    <div style="display:flex;flex-direction:column;gap:8px;max-width:720px">
+      <div style="font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#ae1800">02</div>
+      <h2 style="margin:0;font-size:32px;font-weight:800;line-height:1.1">Ekranlar ve durumlar</h2>
+      <p style="margin:0;text-wrap:pretty">Her çerçeve ilgili durumda açılır ve etkileşime devam edilebilir. Numaralar akışlarda referans olarak kullanılır.</p>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:56px 40px">
+      <sc-for list="{{screens}}" as="s" hint-placeholder-count="18">
+        <div id="{{s.id}}" data-screen-label="{{s.label}}" style="display:flex;flex-direction:column;gap:20px;width:410px">
+          <div style="display:flex;gap:12px;align-items:baseline;border-top:2px solid rgba(32,30,29,0.4);padding-top:10px">
+            <div style="font-size:14px;font-weight:800;color:#ae1800;min-width:24px">{{s.n}}</div>
+            <div style="display:flex;flex-direction:column;gap:2px"><div style="font-size:17px;font-weight:800">{{s.title}}</div><div style="font-size:13px;color:#605d5d;text-wrap:pretty">{{s.note}}</div></div>
+          </div>
+          <div style="position:relative;width:390px;height:844px;border-radius:48px;overflow:hidden;box-shadow:0 0 0 10px #201e1d;margin:0 10px 10px">
+            <dc-import name="ParselEditor" device="phone" scenario="{{s.sc}}" hint-size="390px,844px" style="position:absolute;inset:0"></dc-import>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section id="s3" style="padding:48px 40px;border-bottom:2px solid rgba(32,30,29,0.4);display:flex;flex-direction:column;gap:32px">
+    <div style="display:flex;flex-direction:column;gap:8px;max-width:720px">
+      <div style="font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#ae1800">03</div>
+      <h2 style="margin:0;font-size:32px;font-weight:800;line-height:1.1">Kullanıcı akışları</h2>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));border-top:2px solid rgba(32,30,29,0.4);border-left:2px solid rgba(32,30,29,0.4)">
+      <sc-for list="{{flows}}" as="f" hint-placeholder-count="8">
+        <div style="display:flex;flex-direction:column;gap:12px;padding:20px;border-right:2px solid rgba(32,30,29,0.4);border-bottom:2px solid rgba(32,30,29,0.4)">
+          <div style="font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#ae1800">{{f.n}}</div>
+          <div style="font-size:18px;font-weight:800;line-height:1.2">{{f.title}}</div>
+          <div style="display:flex;flex-direction:column">
+            <sc-for list="{{f.steps}}" as="st">
+              <div style="display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:baseline;padding:7px 0;border-bottom:1px solid rgba(32,30,29,0.2)">
+                <span style="font-size:12px;font-weight:800;color:#605d5d">{{st.i}}</span>
+                <span style="font-size:14px;text-wrap:pretty">{{st.t}}</span>
+                <sc-if value="{{st.ref}}"><a href="{{st.href}}" style="font-size:12px;font-weight:800;text-decoration:none;padding:1px 6px;background:#fff2ef;color:#ae1800">{{st.ref}}</a></sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section id="s4" style="padding:48px 40px;border-bottom:2px solid rgba(32,30,29,0.4);display:flex;flex-direction:column;gap:40px">
+    <div style="display:flex;flex-direction:column;gap:8px;max-width:760px">
+      <div style="font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#ae1800">04</div>
+      <h2 style="margin:0;font-size:32px;font-weight:800;line-height:1.1">Tablet ve masaüstü</h2>
+      <p style="margin:0;text-wrap:pretty">Aynı içerik, aynı bileşenler. Mobildeki alt sayfa geniş ekranda sağ detay paneline dönüşür; araçlar tablet yatayda başparmak erişimi için sol kenarda dikey şerit, masaüstünde üst çubukta. Dikey tablet mobil düzeni kullanır.</p>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;gap:12px;align-items:baseline;border-top:2px solid rgba(32,30,29,0.4);padding-top:10px;max-width:1180px"><strong style="color:#ae1800">T1</strong><strong>Tablet yatay · 1180 × 820</strong><span style="color:#605d5d;font-size:14px">Canvas %71 · panel %29 · sol araç şeridi · kalem hassas isabet alanı</span></div>
+      <div style="overflow-x:auto;padding:12px">
+        <div data-screen-label="T1 Tablet yatay" style="position:relative;width:1180px;height:820px;border-radius:28px;overflow:hidden;box-shadow:0 0 0 12px #201e1d">
+          <dc-import name="ParselEditor" device="tablet" scenario="parcel" hint-size="1180px,820px" style="position:absolute;inset:0"></dc-import>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;gap:12px;align-items:baseline;border-top:2px solid rgba(32,30,29,0.4);padding-top:10px"><strong style="color:#ae1800">T2</strong><strong>Tablet dikey · 820 × 1180</strong><span style="color:#605d5d;font-size:14px">Mobil alt sayfa, 600 px genişlik</span></div>
+        <div style="padding:12px">
+          <div data-screen-label="T2 Tablet dikey" style="position:relative;width:820px;height:1180px;border-radius:28px;overflow:hidden;box-shadow:0 0 0 12px #201e1d">
+            <dc-import name="ParselEditor" device="tabletPortrait" scenario="edge" hint-size="820px,1180px" style="position:absolute;inset:0"></dc-import>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;gap:12px;align-items:baseline;border-top:2px solid rgba(32,30,29,0.4);padding-top:10px;max-width:1440px"><strong style="color:#ae1800">D1</strong><strong>Masaüstü · 1440 × 900</strong><span style="color:#605d5d;font-size:14px">Üst araç çubuğu · sağ tık bağlam menüsü · tekerlek yakınlaştırma · hover imleçleri</span></div>
+      <div style="overflow-x:auto;padding:4px">
+        <div data-screen-label="D1 Masaüstü" style="position:relative;width:1440px;height:900px;overflow:hidden;border:2px solid #201e1d">
+          <dc-import name="ParselEditor" device="desktop" scenario="edge" hint-size="1440px,900px" style="position:absolute;inset:0"></dc-import>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="s5" style="padding:48px 40px;border-bottom:2px solid rgba(32,30,29,0.4);display:flex;flex-direction:column;gap:32px">
+    <div style="display:flex;flex-direction:column;gap:8px;max-width:720px">
+      <div style="font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#ae1800">05</div>
+      <h2 style="margin:0;font-size:32px;font-weight:800;line-height:1.1">Bilgi mimarisi</h2>
+      <p style="margin:0;text-wrap:pretty">Tek ana yüzey: editör. Diğer her şey canvas’ın üstünde geçici katman olarak açılır ve kapandığında kullanıcıyı aynı görünüme bırakır.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));border-top:2px solid rgba(32,30,29,0.4);border-left:2px solid rgba(32,30,29,0.4)">
+      <sc-for list="{{ia}}" as="c" hint-placeholder-count="5">
+        <div style="display:flex;flex-direction:column;gap:8px;padding:20px;border-right:2px solid rgba(32,30,29,0.4);border-bottom:2px solid rgba(32,30,29,0.4)">
+          <div style="font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#605d5d">{{c.level}}</div>
+          <div style="font-size:18px;font-weight:800">{{c.title}}</div>
+          <div style="display:flex;flex-direction:column">
+            <sc-for list="{{c.items}}" as="i"><div style="padding:6px 0;border-bottom:1px solid rgba(32,30,29,0.2);font-size:14px;text-wrap:pretty">{{i}}</div></sc-for>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section id="s6" style="padding:48px 40px;border-bottom:2px solid rgba(32,30,29,0.4);display:flex;flex-direction:column;gap:40px">
+    <div style="display:flex;flex-direction:column;gap:8px;max-width:720px">
+      <div style="font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#ae1800">06</div>
+      <h2 style="margin:0;font-size:32px;font-weight:800;line-height:1.1">Etkileşim kuralları</h2>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:40px">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <h3 style="margin:0;font-size:20px;font-weight:800">Hareket durum makinesi</h3>
+        <div style="display:flex;flex-direction:column;border-top:2px solid rgba(32,30,29,0.4)">
+          <sc-for list="{{gestures}}" as="g">
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:16px;padding:10px 0;border-bottom:1px solid rgba(32,30,29,0.25);font-size:14px">
+              <span style="font-weight:800">{{g.from}}</span><span style="text-wrap:pretty">{{g.to}}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <h3 style="margin:0;font-size:20px;font-weight:800">Ölçüler ve eşikler</h3>
+        <div style="display:flex;flex-direction:column;border-top:2px solid rgba(32,30,29,0.4)">
+          <sc-for list="{{thresholds}}" as="t">
+            <div style="display:grid;grid-template-columns:minmax(0,1.3fr) auto;gap:16px;padding:10px 0;border-bottom:1px solid rgba(32,30,29,0.25);font-size:14px">
+              <span>{{t.k}}</span><span style="font-weight:800;font-variant-numeric:tabular-nums;text-align:right">{{t.v}}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <h3 style="margin:0;font-size:20px;font-weight:800">Hata dili</h3>
+        <div style="display:flex;flex-direction:column;border-top:2px solid rgba(32,30,29,0.4)">
+          <sc-for list="{{errors}}" as="e">
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:16px;padding:10px 0;border-bottom:1px solid rgba(32,30,29,0.25);font-size:14px">
+              <span style="color:#605d5d;text-decoration:line-through;font-family:ui-monospace,Menlo,monospace;font-size:13px">{{e.bad}}</span><span style="font-weight:600">{{e.good}}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="s7" style="padding:48px 40px;border-bottom:2px solid rgba(32,30,29,0.4);display:flex;flex-direction:column;gap:40px">
+    <div style="display:flex;flex-direction:column;gap:8px;max-width:760px">
+      <div style="font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#ae1800">07</div>
+      <h2 style="margin:0;font-size:32px;font-weight:800;line-height:1.1">Tasarım tokenları</h2>
+      <p style="margin:0;text-wrap:pretty">Değerler Modernist sisteminden (Archivo, tek vurgu #ec3013, 0 radius, 2px çizgiler). Rol adları Astryx konvansiyonunu izler; her renk açık/koyu çift olarak tanımlanır (<code>light-dark()</code>), böylece koyu tema yalnızca token değişimidir.</p>
+    </div>
+    <div style="display:flex;flex-direction:column;border-top:2px solid rgba(32,30,29,0.4)">
+      <div style="display:grid;grid-template-columns:180px minmax(0,1.2fr) 140px 140px minmax(0,1.6fr);gap:16px;padding:8px 0;border-bottom:2px solid rgba(32,30,29,0.4);font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#605d5d"><span>Token</span><span>Astryx rolü</span><span>Açık</span><span>Koyu</span><span>Kullanım</span></div>
+      <sc-for list="{{colors}}" as="c" hint-placeholder-count="14">
+        <div style="display:grid;grid-template-columns:180px minmax(0,1.2fr) 140px 140px minmax(0,1.6fr);gap:16px;padding:10px 0;border-bottom:1px solid rgba(32,30,29,0.25);align-items:center;font-size:14px">
+          <span style="font-weight:800">{{c.name}}</span>
+          <span style="font-family:ui-monospace,Menlo,monospace;font-size:12px;color:#605d5d">{{c.role}}</span>
+          <span style="display:flex;align-items:center;gap:8px"><span style="width:28px;height:28px;flex:none;background:{{c.light}};border:1px solid rgba(32,30,29,0.4)"></span><span style="font-family:ui-monospace,Menlo,monospace;font-size:12px">{{c.lightT}}</span></span>
+          <span style="display:flex;align-items:center;gap:8px"><span style="width:28px;height:28px;flex:none;background:{{c.dark}};border:1px solid rgba(32,30,29,0.4)"></span><span style="font-family:ui-monospace,Menlo,monospace;font-size:12px">{{c.darkT}}</span></span>
+          <span style="font-size:13px;color:#605d5d;text-wrap:pretty">{{c.use}}</span>
+        </div>
+      </sc-for>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:40px">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <h3 style="margin:0;font-size:20px;font-weight:800">Boşluk</h3>
+        <div style="display:flex;flex-direction:column;border-top:2px solid rgba(32,30,29,0.4)">
+          <sc-for list="{{spacing}}" as="s"><div style="display:grid;grid-template-columns:80px 40px 1fr;gap:12px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(32,30,29,0.25);font-size:14px"><span style="font-family:ui-monospace,Menlo,monospace;font-size:12px">{{s.t}}</span><span style="font-weight:800">{{s.v}}</span><span style="display:flex;align-items:center;gap:12px"><span style="height:12px;width:{{s.v}}px;background:#ec3013;flex:none"></span><span style="font-size:13px;color:#605d5d">{{s.use}}</span></span></div></sc-for>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <h3 style="margin:0;font-size:20px;font-weight:800">Radius, çizgi, hareket</h3>
+        <div style="display:flex;flex-direction:column;border-top:2px solid rgba(32,30,29,0.4)">
+          <sc-for list="{{misc}}" as="m"><div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:8px 0;border-bottom:1px solid rgba(32,30,29,0.25);font-size:14px"><span>{{m.k}}</span><span style="font-weight:800;text-align:right">{{m.v}}</span></div></sc-for>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <h3 style="margin:0;font-size:20px;font-weight:800">Tipografi · Archivo</h3>
+        <div style="display:flex;flex-direction:column;border-top:2px solid rgba(32,30,29,0.4)">
+          <sc-for list="{{type}}" as="t"><div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:baseline;padding:8px 0;border-bottom:1px solid rgba(32,30,29,0.25)"><span style="font-size:{{t.size}}px;font-weight:{{t.w}};line-height:1.2">{{t.sample}}</span><span style="font-size:12px;color:#605d5d;white-space:nowrap">{{t.spec}}</span></div></sc-for>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="s8" style="padding:48px 40px;display:flex;flex-direction:column;gap:32px">
+    <div style="display:flex;flex-direction:column;gap:8px;max-width:720px">
+      <div style="font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#ae1800">08</div>
+      <h2 style="margin:0;font-size:32px;font-weight:800;line-height:1.1">Kritik UX kararları</h2>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));border-top:2px solid rgba(32,30,29,0.4);border-left:2px solid rgba(32,30,29,0.4)">
+      <sc-for list="{{decisions}}" as="d" hint-placeholder-count="10">
+        <div style="display:flex;flex-direction:column;gap:8px;padding:20px;border-right:2px solid rgba(32,30,29,0.4);border-bottom:2px solid rgba(32,30,29,0.4)">
+          <div style="font-size:14px;font-weight:800;color:#ae1800">{{d.n}}</div>
+          <div style="font-size:17px;font-weight:800;line-height:1.25">{{d.title}}</div>
+          <div style="font-size:14px;text-wrap:pretty">{{d.why}}</div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals(){
+    const S=[['idle','Ana editör','Canvas tam ekran; alt sayfa kapalı durumda arazi özetini gösterir.'],['parcel','Parsel seçili','Hafif dolgu + vurgu çizgisi. Alt sayfa yarım: mevcut / hedef / fark.'],['edge','Sınır seçili','Kalın çizgi, ortada tutamaç ve dik yön okları. İki taraftaki parseller listelenir.'],['vertex','Köşe seçili','Tutamaç büyür; bağlı sınırlar ve parseller alt sayfada.'],['vdrag','Köşe sürükleme','Bağlı sınırlar vurgulu, parmak üstünde yer değiştirme göstergesi, alan farkları canlı.'],['invalid','Geçersiz köşe sürükleme','Gerçek köşe son geçerli yerde; taralı hayalet köşe ve kısa uyarı.'],['edrag','Sınır sürükleme','Eksene dik kılavuz, iki parselin alan değişimi etiketlerde ve alt sayfada.'],['split1','Bölme modu','Mod çubuğu adım gösterir; parsel sınırındaki köşeler yapışma hedefi.'],['split2','Bölme önizleme','Kesikli önizleme, yeni alanlar, İptal / Parseli Böl.'],['sheetFull','Alt sayfa açık','Hissedar, pay, hedef, kullanım ve komşular; canvas üstte görünür kalır.'],['3d','3D görünüm','Aynı seçim, hafif yükseltilmiş parseller; sürükleme döndürür.'],['more','Diğer işlemler','Alt sayfa listesi; silme boşluk bırakacağı için gerekçesiyle pasif.'],['undo','Geri alma bildirimi','Kısa bildirim ve İleri Al; kalıcı modal yok.'],['locked','Kilitli sınır','Kesikli çizgi, kilit etiketi, tutamaç yok, nedeni açık.'],['merge','Birleştirme onayı','Hafif alt kart; yeni alan ve geri alınabilirlik belirtilir.'],['addv','Sınıra köşe ekleme','Önizleme tutamacı sınır boyunca kayar, parça uzunlukları üstte.'],['empty','Boş durum','Arazi Çiz ya da Dosyadan İçe Aktar.'],['draw','Arazi çizme','Her köşe için dokunma; ilk noktaya dokununca kapanır.']];
+    const screens=S.map(([sc,title,note],i)=>{const n=String(i+1).padStart(2,'0');return {id:'e'+n,n,label:n+' '+title,sc,title,note}});
+    const f=(n,title,steps)=>({n,title,steps:steps.map(([t,r],i)=>({i:String(i+1),t,ref:r||'',href:r?'#e'+r:''}))});
+    const flows=[
+      f('Akış 1','Araziyi aç → parsel seç → alanını incele',[['Editör araziye sığdırılmış açılır; özet alt sayfada','01'],['Parsele dokun: vurgu + alt sayfa yarım','02'],['Hedef, mevcut ve fark okunur; çubuk hedef çizgisine göre',''],['Alt sayfayı yukarı çek: tüm bilgiler','10']]),
+      f('Akış 2','Köşe seç → sürükle → izle → bırak → geri al',[['Köşeye dokun, tutamaç büyür','04'],['Tut ve sürükle; harita kaymaz, alanlar canlı','05'],['Geçersiz bölgeye girersen hayalet köşe ve uyarı','06'],['Bırak: son geçerli konum kaydedilir',''],['Üst çubuktan Geri Al → bildirim + İleri Al','13']]),
+      f('Akış 3','Sınır seç → sürükle → iki parselin değişimini izle',[['Sınıra dokun: kalın çizgi + tutamaç','03'],['Tutamaçtan ya da çizgiden sürükle; dik yönde hareket','07'],['İki parselin alan farkı etiket ve alt sayfada',''],['Bırak; Geri Al her zaman üst çubukta','']]),
+      f('Akış 4','Sınır seç → köşe ekle → yeni köşeyi sürükle',[['Sınırı seç','03'],['Alt sayfada Köşe ekle','16'],['Önizleme tutamacını sınır boyunca konumla, Ekle',''],['Yeni köşe seçili gelir; hemen sürüklenebilir','04']]),
+      f('Akış 5','Parsel seç → Böl → başlangıç → bitiş → önizleme → onay',[['Parsel seç, Böl','02'],['“İlk sınır noktasını seç”','08'],['“İkinci sınır noktasını seç”',''],['Önizleme: geçerliyse vurgu rengi, değilse uyarı + neden','09'],['Parseli Böl; yeni parsel seçili gelir, bildirimde Geri Al','']]),
+      f('Akış 6','Ortak sınır seç → Parselleri Birleştir → onay',[['İki parsel arasındaki sınırı seç','03'],['Parselleri Birleştir','15'],['Onay kartı: yeni alan, geri alınabilir',''],['Birleşik parsel seçili gelir; bildirimde Geri Al','']]),
+      f('Akış 7','2D → 3D → yörünge → tekrar 2D',[['Sağ üstte 3D; aynı kamera merkezi','11'],['Tek parmak sürükleme yörünge (yatay: dönüş, dikey: eğim)',''],['Parsele dokununca seçim ve alt sayfa aynı',''],['2D’ye dön; seçim korunur','02']]),
+      f('Akış 8','Mobil: pinch zoom → pan → köşe düzenleme',[['İki parmak: pinch; odak parmakların ortası',''],['Bir parmak kalırsa sıçramadan pan’e devam',''],['Köşeye dokun ve sürükle','05'],['Sürüklerken ikinci parmak gelirse düzenleme iptal, köşe başlangıca döner, pinch başlar','']])
+    ];
+    const ia=[
+      {level:'Seviye 0',title:'Projeler',items:['Arazi listesi','Yeni arazi → Boş durum','Arazi Çiz / Dosyadan İçe Aktar']},
+      {level:'Seviye 1',title:'Editör (tek yüzey)',items:['Üst çubuk: geri, arazi adı, Geri Al, İleri Al, proje menüsü','Canvas: parseller, sınırlar, köşeler, etiketler','Canvas kontrolleri: 2D/3D, Araziye sığdır, ölçek','Araç çubuğu: Seç, Köşe, Böl, Görünüm, Daha']},
+      {level:'Seviye 2 · bağlamsal',title:'Alt sayfa / detay paneli',items:['Seçim yok: arazi özeti + parsel listesi','Parsel: alan, hedef, fark, hissedar, işlemler','Sınır: uzunluk, iki taraf, birleştir, köşe ekle','Köşe: bağlı parseller, kaldır','Mod: bölme adımları, köşe ekleme, arazi çizme']},
+      {level:'Seviye 3 · geçici',title:'Katmanlar',items:['Diğer işlemler (alt sayfa liste / sağ tık menüsü)','Birleştirme onayı','Bildirim: Geri Al / İleri Al','Uyarı çipi: geçersiz hareket nedeni']},
+      {level:'Veri',title:'Parsel kaydı',items:['No, ad, hissedar, pay %','Hedef alan (pay × arazi)','Mevcut alan m² + dönüm','Kullanım, yükseklik (3D)','Komşular, köşe sayısı, çevre']}
+    ];
+    const gestures=[
+      {from:'Boşta → basış',to:'Bekleme. Hedef, basış noktasında isabet testiyle belirlenir (köşe → sınır → parsel).'},
+      {from:'Bekleme → bırak (< 8 px)',to:'Dokunma: seçim. Boş alan seçimi kaldırır.'},
+      {from:'Bekleme → 500 ms sabit',to:'Uzun basış: seçim + bağlam listesi alt sayfada (mobil).'},
+      {from:'Bekleme → hareket, hedef köşe',to:'Köşe sürükleme. Tutma ofseti korunur, köşe parmağa zıplamaz. Pan kilitli.'},
+      {from:'Bekleme → hareket, hedef sınır',to:'Sınır sürükleme, eksene dik. Pan kilitli.'},
+      {from:'Bekleme → hareket, diğer',to:'Pan (3D’de yörünge).'},
+      {from:'Herhangi → 2. parmak',to:'Pinch. Aktif düzenleme iptal edilir, geometri başlangıca döner.'},
+      {from:'Pinch → tek parmak kalır',to:'Kalan parmağın konumundan pan; harita sıçramaz.'},
+      {from:'Sürükleme → geçersiz konum',to:'Gerçek geometri son geçerli durumda kalır, hayalet parmağı izler; bırakınca hayalet kaybolur.'},
+      {from:'Sabit hedef → sürükleme',to:'Hareket yok, kısa ipucu: “Arazi köşesi sabit”.'}
+    ];
+    const thresholds=[{k:'Köşe isabet yarıçapı · parmak',v:'24 px (48 px alan)'},{k:'Köşe isabet yarıçapı · fare / kalem',v:'12 px'},{k:'Sınır isabet bandı · parmak / fare',v:'18 / 8 px'},{k:'Sürükleme başlama eşiği · parmak / fare',v:'8 / 4 px'},{k:'Uzun basış',v:'500 ms'},{k:'Köşe görseli · normal / seçili / sürüklenen',v:'8 / 16 / 18 px'},{k:'Sınır tutamacı',v:'18 px + 44 px isabet'},{k:'Minimum dokunma hedefi',v:'44 × 44 px'},{k:'Araç çubuğu öğesi',v:'≥ 56 × 58 px'},{k:'Minimum parsel alanı',v:'60 m²'},{k:'Dış sınır köşesi kayma sınırı',v:'kenarın %2–98’i'},{k:'Yakınlaştırma aralığı',v:'0,4 – 40 px/m'}];
+    const errors=[{bad:'Face winding invalid',good:'Bu konum parseli geçersiz hale getiriyor.'},{bad:'Segment intersection detected',good:'Sınırlar birbirini kesemez.'},{bad:'Area <= EPSILON',good:'Parsel alanı çok küçüldü.'},{bad:'Split chord outside polygon',good:'Bölme çizgisi parselin dışına taşıyor.'},{bad:'Collinear split endpoints',good:'Noktalar aynı sınır üzerinde olamaz.'},{bad:'Vertex degree > 2',good:'Birden fazla sınırı bağlayan köşe kaldırılamaz.'},{bad:'Delete creates hole',good:'Silmek boşluk bırakır — komşu parselle birleştirin.'}];
+    const c=(name,role,light,dark,use,lightT,darkT)=>({name,role,light,dark,use,lightT:lightT||light,darkT:darkT||dark});
+    const colors=[
+      c('Background','--color-wash','#f3f2f2','#151413','Uygulama zemini, çubuklar, paneller'),
+      c('Canvas','--map-canvas (domain)','#e3e0e0','#1c1b1a','Arazi dışı harita zemini + 10 m ızgara'),
+      c('Surface','--color-background-surface','#f8f6f6','#1f1d1c','Parsel dolgusu (3 ton dönüşümlü)'),
+      c('SurfaceSecondary','--color-muted','#eae9e9','#2a2827','Kilit bandı, pasif kutular'),
+      c('TextPrimary','--color-text-primary','#201e1d','#eeeaea','Metin, dış sınır, sabit köşe'),
+      c('TextSecondary','--color-text-secondary','#605d5d','#bab6b6','Etiket adları, açıklamalar'),
+      c('Border','--color-border','rgba(32,30,29,0.4)','rgba(238,234,234,0.35)','2px bölücüler, iç sınırlar','ink 40%','on-dark 35%'),
+      c('Primary','--color-accent','#ec3013','#ff563c','Birincil aksiyon, aktif araç, seçim'),
+      c('PrimaryHover','--color-accent-600','#dd2b0f','#ff9783','Hover; basılı: accent-700 #ae1800'),
+      c('Selected','--color-accent-muted','#fff2ef','rgba(255,86,60,0.16)','Seçili parsel dolgusu, aktif araç zemini','accent-100','accent 16%'),
+      c('Valid','--color-positive','#1f6b43','#5fbf8a','“Hedefte”, alan artışı + işaret'),
+      c('Warning','--color-warning','#8a5200','#f2b25c','Hedeften sapma, alan azalışı + ok'),
+      c('Danger','--color-negative','#7c1405','#ff9783','Geçersiz: taralı hayalet + kesikli çizgi + ikon','accent-800','accent-400'),
+      c('Locked','--color-text-disabled','#7d7979','#7d7979','Kilitli / pasif; her zaman kilit ikonu + etiket')
+    ];
+    const spacing=[{t:'--space-1',v:4,use:'İkon–metin'},{t:'--space-2',v:8,use:'Buton aralığı'},{t:'--space-3',v:12,use:'Canvas kenar boşluğu'},{t:'--space-4',v:16,use:'Panel iç boşluğu'},{t:'--space-6',v:24,use:'Blok arası'},{t:'--space-8',v:32,use:'Bölüm arası'}];
+    const misc=[{k:'Radius · tüm UI (Modernist)',v:'0'},{k:'Radius · harita tutamaçları',v:'tam daire'},{k:'Sabit köşe',v:'kare (şekille ayrışır)'},{k:'Bölücü',v:'2 px ink 40%'},{k:'Dış sınır / iç sınır',v:'3 / 1,5 px'},{k:'Seçili sınır',v:'4,5 px + 14 px hale'},{k:'Kilitli sınır',v:'4 px, 8-5 kesikli'},{k:'Hareket · hızlı (seçim, tutamaç)',v:'175 ms'},{k:'Hareket · orta (alt sayfa, sığdır)',v:'410 ms'},{k:'2D ↔ 3D geçişi',v:'520 ms ease-out'},{k:'Azaltılmış hareket',v:'0 ms'},{k:'Gölge · kontroller / katmanlar',v:'sm / lg'}];
+    const type=[{size:32,w:800,sample:'Karaağaç Arazisi',spec:'Başlık 32 / 800'},{size:18,w:800,sample:'Parsel 12 · 2.055 m²',spec:'Panel başlığı 18 / 800'},{size:15,w:400,sample:'Metin ve liste satırları',spec:'Gövde 15 / 400'},{size:14,w:800,sample:'Buton etiketi',spec:'Aksiyon 14 / 800'},{size:12,w:800,sample:'P12 · AY',spec:'Harita etiketi 12 / 800'},{size:12,w:600,sample:'HEDEF ALAN',spec:'Üst etiket 12 / 600 · 0,08em'}];
+    const D=(n,title,why)=>({n,title,why});
+    const decisions=[
+      D('K1','Geçersiz hareket durdurulur, geri sarılmaz','Gerçek geometri her karede geçerli kalır; parmak geçersiz bölgeye girince yalnızca hayalet köşe onu izler. Bırakıldığında hiçbir şey zıplamaz, çünkü ekrandaki son geçerli durum zaten kayıtlı durumdur.'),
+      D('K2','Topoloji paylaşılan köşelerle kurulur','Her köşe tek kayıttır ve komşu parseller onu paylaşır. Boşluk ve üst üste binme bu yüzden yapısal olarak oluşamaz; kullanıcı kural görmez, yalnızca doğal olarak engellenen hareket görür.'),
+      D('K3','Dış sınırdaki köşeler sınır boyunca kayar','İç bölme çizgisini dış kenar üzerinde kaydırmak en sık düzeltmedir. Köşeyi kenara bağlamak, dış sınırı bozmadan bunu tek hareketle yapar.'),
+      D('K4','Alt sayfa, geniş ekranda sağ panel','Aynı içerik ve sıra iki yerde de geçerli; kullanıcı cihaz değiştirdiğinde yeniden öğrenmez. Alt sayfa en fazla canvas’ın alt kısmını kaplar, geometri üstte görünür kalır.'),
+      D('K5','Görsel küçük, isabet alanı büyük','Köşe 8 px çizilir ama 48 px alandan yakalanır; sınır ince çizilir ama 36 px bantta seçilir. Kalem ve fare daha dar alan kullanır.'),
+      D('K6','Sürükleme doğrudan başlar','Önce seçip sonra sürükleme zorunlu değil; köşeyi ya da sınırı tutup hareket ettirmek yeterli. Seçim, sürüklemenin yan etkisi olarak gelir.'),
+      D('K7','Kalıcı modal yerine bildirim + Geri Al','Tüm düzenleme işlemleri geri alınabilir olduğu için yalnızca birleştirmede hafif bir onay kartı var. Geri Al üst çubukta ve bildirimde.'),
+      D('K8','Bölme noktaları en yakın sınıra yapışır','Kullanıcı sınıra tam isabet etmek zorunda değil; parsel içinde herhangi bir yere dokunmak en yakın sınır noktasını seçer. Mevcut köşeler 22 px içinde önceliklidir.'),
+      D('K9','Renk tek başına anlam taşımaz','Seçim: dolgu + çizgi + büyüyen tutamaç. Geçersiz: tarama + kesikli çizgi + uyarı ikonu + metin. Kilit: kesikli çizgi + kilit ikonu + “Sabit sınır”. Hedef farkı: işaret ve ok.'),
+      D('K10','3D görselleştirmedir, düzenleme 2D’de','3D’de düzenleme araçları kilitlenir ve nedeni söylenir; seçim, kamera merkezi ve panel korunur. Geçiş ayrı bir ekran değil, aynı sahnenin eğilmesidir.'),
+      D('K11','Tek vurgu rengi: seçim ve birincil aksiyon','Modernist sistem tek vurgu kullanır. Geçersiz durum ayrı bir kırmızı yerine koyu vurgu tonu (accent-800) ve tarama deseni kullanır, böylece seçimle karışmaz.'),
+      D('K12','Etiketlerde yalnızca no + baş harf','“P12 · AY” ve alan haritada yeterli. Tam isim, pay ve hedef detay panelinde; küçük parsellerde önce alan, sonra ad gizlenir.')
+    ];
+    return {screens,flows,ia,gestures,thresholds,errors,colors,spacing,misc,type,decisions};
+  }
+}
+</script>
+</body>
+</html>

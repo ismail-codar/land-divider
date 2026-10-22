@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&amp;display=swap">
+<link rel="stylesheet" href="https://unpkg.com/lucide-static@0.460.0/font/lucide.css">
+<style>body{margin:0;background:#f3f2f2}*,*::before,*::after{box-sizing:border-box}</style>
+</helmet>
+<div ref="{{rootRef}}" style="position:absolute;inset:0;overflow:hidden;background:#f3f2f2;color:#201e1d;font-family:Archivo,system-ui,sans-serif;font-size:14px;line-height:1.35;-webkit-font-smoothing:antialiased;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent">
+
+  <div ref="{{cvRef}}" onPointerDown="{{onDown}}" onPointerMove="{{onMove}}" onPointerUp="{{onUp}}" onPointerCancel="{{onUp}}" onPointerLeave="{{onLeave}}" onContextMenu="{{onCtx}}" style="position:absolute;left:{{L.cv.l}}px;top:{{L.cv.t}}px;width:{{L.cv.w}}px;height:{{L.cv.h}}px;overflow:hidden;touch-action:none;background:#e3e0e0;cursor:{{cursor}}">
+    <div style="position:absolute;inset:0;pointer-events:none;opacity:{{grid.o}};background-image:linear-gradient(#d6d2d2 1px,transparent 1px),linear-gradient(90deg,#d6d2d2 1px,transparent 1px);background-size:{{grid.s}}px {{grid.s}}px;background-position:{{grid.x}}px {{grid.y}}px"></div>
+    <svg width="100%" height="100%" style="position:absolute;inset:0;overflow:visible;pointer-events:none">
+      <defs>
+        <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="2" height="6" fill="#7c1405" opacity="0.35"></rect></pattern>
+      </defs>
+      <sc-for list="{{sc.faces}}" as="f"><polygon points="{{f.pts}}" fill="{{f.fill}}" stroke="{{f.stroke}}" style="stroke-width:{{f.sw}}px;stroke-linejoin:round"></polygon></sc-for>
+      <sc-for list="{{sc.polys}}" as="p"><polygon points="{{p.pts}}" fill="{{p.fill}}"></polygon></sc-for>
+      <sc-for list="{{sc.lines}}" as="l"><line x1="{{l.x1}}" y1="{{l.y1}}" x2="{{l.x2}}" y2="{{l.y2}}" stroke="{{l.c}}" style="stroke-width:{{l.w}}px;stroke-dasharray:{{l.dash}};stroke-linecap:{{l.cap}}"></line></sc-for>
+      <sc-for list="{{sc.dots}}" as="d"><rect x="{{d.x}}" y="{{d.y}}" width="{{d.s}}" height="{{d.s}}" rx="{{d.rx}}" fill="{{d.fill}}" stroke="{{d.stroke}}" style="stroke-width:{{d.sw}}px;stroke-dasharray:{{d.dash}}"></rect></sc-for>
+      <sc-for list="{{sc.tris}}" as="t"><polygon points="{{t.pts}}" fill="{{t.fill}}"></polygon></sc-for>
+    </svg>
+    <sc-for list="{{sc.labels}}" as="lb">
+      <div style="position:absolute;left:{{lb.x}}px;top:{{lb.y}}px;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:2px;pointer-events:none;white-space:nowrap;font-variant-numeric:tabular-nums">
+        <div style="font-size:12px;font-weight:800;letter-spacing:0.02em;color:{{lb.c}}">{{lb.name}}</div>
+        <sc-if value="{{lb.showArea}}" hint-placeholder-val="{{ true }}"><div style="font-size:12px;font-weight:600;color:#201e1d">{{lb.area}}</div></sc-if>
+        <sc-if value="{{lb.hasDelta}}"><div style="font-size:12px;font-weight:800;padding:1px 6px;background:{{lb.dbg}};color:{{lb.dfg}}">{{lb.delta}}</div></sc-if>
+      </div>
+    </sc-for>
+    <sc-for list="{{sc.chips}}" as="cp">
+      <div style="position:absolute;left:{{cp.x}}px;top:{{cp.y}}px;transform:translate(-50%,-50%);display:flex;align-items:center;gap:4px;padding:2px 6px;font-size:12px;font-weight:600;white-space:nowrap;pointer-events:none;background:{{cp.bg}};color:{{cp.fg}};border:1px solid {{cp.bd}};font-variant-numeric:tabular-nums">
+        <i class="{{cp.icon}}" style="font-size:12px;line-height:1"></i><span>{{cp.text}}</span>
+      </div>
+    </sc-for>
+    <sc-if value="{{ro.show}}">
+      <div style="position:absolute;left:{{ro.x}}px;top:{{ro.y}}px;transform:translate(-50%,-100%);display:flex;align-items:center;gap:6px;padding:6px 10px;font-size:13px;font-weight:600;white-space:nowrap;pointer-events:none;background:{{ro.bg}};color:{{ro.fg}};box-shadow:0 3px 10px rgba(45,43,43,0.16);font-variant-numeric:tabular-nums">
+        <i class="{{ro.icon}}" style="font-size:14px;line-height:1"></i>{{ro.text}}
+      </div>
+    </sc-if>
+    <sc-if value="{{st.empty}}">
+      <sc-if value="{{showEmptyCard}}">
+        <div style="position:absolute;left:24px;right:24px;top:50%;transform:translateY(-60%);display:flex;flex-direction:column;gap:16px;padding:24px;background:#f3f2f2;border-top:2px solid #201e1d;max-width:420px;margin:0 auto">
+          <div style="font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#605d5d">Yeni arazi</div>
+          <div style="font-size:22px;font-weight:800;line-height:1.15;text-wrap:pretty">Arazi sınırı oluşturun veya içe aktarın</div>
+          <div style="font-size:14px;color:#605d5d;text-wrap:pretty">Köşelere dokunarak dış sınırı çizin ya da tapu / KML / DXF dosyası yükleyin.</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div onClick="{{startDraw}}" style="display:flex;align-items:center;gap:10px;height:48px;padding:0 16px;background:#ec3013;color:#f3f2f2;font-weight:800;cursor:pointer" style-active="background:#ae1800"><i class="icon-pen-tool" style="font-size:18px"></i>Arazi Çiz</div>
+            <div onClick="{{importSample}}" style="display:flex;align-items:center;gap:10px;height:48px;padding:0 16px;border:1px solid rgba(32,30,29,0.4);font-weight:800;cursor:pointer" style-active="background:rgba(32,30,29,0.08)"><i class="icon-upload" style="font-size:18px"></i>Dosyadan İçe Aktar</div>
+          </div>
+        </div>
+      </sc-if>
+    </sc-if>
+  </div>
+
+  <sc-if value="{{L.statusH}}">
+    <div style="position:absolute;left:0;top:0;right:0;height:{{L.statusH}}px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;font-size:14px;font-weight:600;background:#f3f2f2">
+      <span>9:41</span><span style="display:flex;gap:6px;align-items:center"><i class="icon-signal" style="font-size:15px"></i><i class="icon-wifi" style="font-size:15px"></i><i class="icon-battery-full" style="font-size:17px"></i></span>
+    </div>
+  </sc-if>
+
+  <div style="position:absolute;left:0;right:0;top:{{L.statusH}}px;height:{{L.tH}}px;display:flex;align-items:center;gap:4px;padding:0 4px;background:#f3f2f2;border-bottom:2px solid rgba(32,30,29,0.4)">
+    <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:rgba(32,30,29,0.07)"><i class="icon-arrow-left" style="font-size:22px"></i></div>
+    <div style="display:flex;flex-direction:column;min-width:0;padding-right:8px">
+      <div style="font-size:16px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Karaağaç Arazisi</div>
+      <div style="font-size:12px;color:#605d5d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{topSub}}</div>
+    </div>
+    <sc-if value="{{dTopA}}">
+      <div style="display:flex;gap:4px;margin-left:24px;padding-left:16px;border-left:2px solid rgba(32,30,29,0.4);height:36px;align-items:center">
+        <sc-for list="{{toolsD}}" as="t">
+          <div onClick="{{t.onClick}}" title="{{t.label}}" style="display:flex;align-items:center;gap:8px;height:36px;padding:0 12px;cursor:pointer;font-size:14px;font-weight:600;background:{{t.bg}};color:{{t.fg}}" style-hover="outline:1px solid rgba(32,30,29,0.4)"><i class="{{t.icon}}" style="font-size:17px"></i>{{t.label}}</div>
+        </sc-for>
+      </div>
+    </sc-if>
+    <div style="flex:1"></div>
+    <div onClick="{{doUndo}}" title="Geri al" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:{{undoC}}" style-hover="background:rgba(32,30,29,0.07)"><i class="icon-undo-2" style="font-size:21px"></i></div>
+    <div onClick="{{doRedo}}" title="İleri al" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:{{redoC}}" style-hover="background:rgba(32,30,29,0.07)"><i class="icon-redo-2" style="font-size:21px"></i></div>
+    <sc-if value="{{dTopB}}">
+      <div style="display:flex;border:1px solid rgba(32,30,29,0.4);margin:0 8px">
+        <sc-for list="{{seg}}" as="s"><div onClick="{{s.onClick}}" style="width:48px;height:34px;display:flex;align-items:center;justify-content:flex-start;padding-left:12px;font-size:13px;font-weight:800;cursor:pointer;background:{{s.bg}};color:{{s.fg}}">{{s.label}}</div></sc-for>
+      </div>
+    </sc-if>
+    <div onClick="{{openTopMenu}}" title="Daha fazla" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:rgba(32,30,29,0.07)"><i class="icon-ellipsis-vertical" style="font-size:21px"></i></div>
+  </div>
+
+  <sc-if value="{{showSeg}}">
+    <div style="position:absolute;left:{{pos.segX}}px;top:{{pos.segY}}px;display:flex;flex-direction:column;gap:8px;align-items:flex-end">
+      <div style="display:flex;background:#f3f2f2;border:1px solid rgba(32,30,29,0.4);box-shadow:0 1px 2px rgba(45,43,43,0.14)">
+        <sc-for list="{{seg}}" as="s"><div onClick="{{s.onClick}}" style="width:48px;height:44px;display:flex;align-items:center;padding-left:12px;font-size:14px;font-weight:800;cursor:pointer;background:{{s.bg}};color:{{s.fg}}">{{s.label}}</div></sc-for>
+      </div>
+      <sc-if value="{{isPhone}}">
+        <div onClick="{{doFit}}" title="Araziye sığdır" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:#f3f2f2;border:1px solid rgba(32,30,29,0.4);cursor:pointer;box-shadow:0 1px 2px rgba(45,43,43,0.14)" style-active="background:#eae9e9"><i class="icon-scan" style="font-size:20px"></i></div>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{showZoom}}">
+    <div style="position:absolute;left:{{pos.zoomX}}px;top:{{pos.zoomY}}px;display:flex;flex-direction:column;background:#f3f2f2;border:1px solid rgba(32,30,29,0.4);box-shadow:0 1px 2px rgba(45,43,43,0.14)">
+      <div onClick="{{zoomIn}}" title="Yakınlaş" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:rgba(32,30,29,0.07)"><i class="icon-plus" style="font-size:20px"></i></div>
+      <div style="height:1px;background:rgba(32,30,29,0.4)"></div>
+      <div onClick="{{zoomOut}}" title="Uzaklaş" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:rgba(32,30,29,0.07)"><i class="icon-minus" style="font-size:20px"></i></div>
+      <div style="height:2px;background:rgba(32,30,29,0.4)"></div>
+      <div onClick="{{doFit}}" title="Araziye sığdır" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:rgba(32,30,29,0.07)"><i class="icon-scan" style="font-size:20px"></i></div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{scale.show}}">
+    <div style="position:absolute;left:{{pos.scaleX}}px;top:{{pos.scaleY}}px;display:flex;flex-direction:column;gap:2px;pointer-events:none">
+      <div style="font-size:12px;font-weight:600;color:#201e1d">{{scale.text}}</div>
+      <div style="width:{{scale.w}}px;height:6px;border:2px solid #201e1d;border-top:0"></div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{instr.show}}">
+    <div style="position:absolute;left:{{pos.insX}}px;top:{{pos.insY}}px;max-width:{{pos.insW}}px;display:flex;align-items:center;gap:10px;padding:0 4px 0 12px;min-height:44px;background:{{instr.bg}};color:{{instr.fg}};box-shadow:0 3px 10px rgba(45,43,43,0.16)">
+      <sc-if value="{{instr.step}}"><div style="font-size:12px;font-weight:800;padding:2px 6px;border:1px solid currentColor">{{instr.step}}</div></sc-if>
+      <i class="{{instr.icon}}" style="font-size:16px"></i>
+      <div style="font-size:14px;font-weight:600;text-wrap:pretty;padding:8px 0">{{instr.text}}</div>
+      <sc-if value="{{instr.closable}}"><div onClick="{{exitTool}}" title="Moddan çık" style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none"><i class="icon-x" style="font-size:18px"></i></div></sc-if>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{isTablet}}">
+    <div style="position:absolute;left:16px;top:{{pos.railY}}px;display:flex;flex-direction:column;background:#f3f2f2;border:1px solid rgba(32,30,29,0.4);box-shadow:0 3px 10px rgba(45,43,43,0.16)">
+      <sc-for list="{{tools}}" as="t">
+        <div onClick="{{t.onClick}}" style="width:80px;height:60px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;padding-left:12px;cursor:pointer;background:{{t.bg}};color:{{t.fg}};border-left:3px solid {{t.bar}}"><i class="{{t.icon}}" style="font-size:20px"></i><span style="font-size:12px;font-weight:600">{{t.label}}</span></div>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{showPanel}}">
+    <div style="position:absolute;left:{{pn.l}}px;top:{{pn.t}}px;width:{{pn.w}}px;height:{{pn.h}}px;display:flex;flex-direction:column;background:#f3f2f2;border-top:{{pn.bt}};border-left:{{pn.bl}};box-shadow:{{pn.sh}};transition:{{pn.tr}};overflow:hidden">
+      <sc-if value="{{isPhone}}">
+        <div onPointerDown="{{sheetDown}}" onPointerMove="{{sheetMove}}" onPointerUp="{{sheetUp}}" onPointerCancel="{{sheetUp}}" style="flex:none;height:20px;display:flex;align-items:center;justify-content:center;touch-action:none;cursor:grab">
+          <div style="width:40px;height:4px;background:#9b9797"></div>
+        </div>
+      </sc-if>
+      <div onPointerDown="{{sheetDown}}" onPointerMove="{{sheetMove}}" onPointerUp="{{sheetUp}}" onPointerCancel="{{sheetUp}}" style="flex:none;display:flex;align-items:center;gap:12px;padding:{{pn.hp}};min-height:52px;touch-action:none">
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+          <div style="font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:{{pc.kc}}">{{pc.kicker}}</div>
+          <div style="font-size:18px;font-weight:800;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{pc.title}}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;font-variant-numeric:tabular-nums">
+          <div style="font-size:18px;font-weight:800;white-space:nowrap">{{pc.value}}</div>
+          <sc-if value="{{pc.valueSub}}"><div style="font-size:12px;color:#605d5d;white-space:nowrap">{{pc.valueSub}}</div></sc-if>
+        </div>
+      </div>
+      <div style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:16px;padding:4px 16px 24px;touch-action:pan-y">
+
+        <sc-if value="{{pc.banner}}">
+          <div style="display:flex;gap:10px;align-items:flex-start;padding:12px;background:{{pc.banner.bg}};color:{{pc.banner.fg}};border-left:0;border-top:2px solid {{pc.banner.fg}}">
+            <i class="{{pc.banner.icon}}" style="font-size:18px;margin-top:1px"></i>
+            <div style="display:flex;flex-direction:column;gap:2px"><div style="font-weight:800">{{pc.banner.title}}</div><div style="font-size:13px;text-wrap:pretty">{{pc.banner.text}}</div></div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{pc.target}}">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-top:2px solid rgba(32,30,29,0.4)">
+              <div style="display:flex;flex-direction:column;gap:2px;padding:8px 8px 0 0"><div style="font-size:12px;color:#605d5d">Mevcut</div><div style="font-size:15px;font-weight:800;font-variant-numeric:tabular-nums">{{pc.target.cur}}</div></div>
+              <div style="display:flex;flex-direction:column;gap:2px;padding:8px 8px 0;border-left:1px solid rgba(32,30,29,0.4)"><div style="font-size:12px;color:#605d5d">Hedef</div><div style="font-size:15px;font-weight:800;font-variant-numeric:tabular-nums">{{pc.target.tgt}}</div></div>
+              <div style="display:flex;flex-direction:column;gap:2px;padding:8px 0 0 8px;border-left:1px solid rgba(32,30,29,0.4)"><div style="font-size:12px;color:#605d5d">Fark</div><div style="display:flex;align-items:center;gap:4px;font-size:15px;font-weight:800;color:{{pc.target.fg}};font-variant-numeric:tabular-nums"><i class="{{pc.target.icon}}" style="font-size:14px"></i>{{pc.target.diff}}</div></div>
+            </div>
+            <div style="position:relative;height:6px;background:#d7d3d3">
+              <div style="position:absolute;left:0;top:0;bottom:0;width:{{pc.target.pct}}%;background:{{pc.target.bar}}"></div>
+              <div style="position:absolute;left:{{pc.target.mark}}%;top:-4px;bottom:-4px;width:2px;background:#201e1d"></div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{pc.sides}}">
+          <div style="display:flex;flex-direction:column;border-top:2px solid rgba(32,30,29,0.4)">
+            <sc-for list="{{pc.sides}}" as="sd">
+              <div onClick="{{sd.onClick}}" style="display:flex;align-items:center;gap:12px;min-height:48px;border-bottom:1px solid rgba(32,30,29,0.4);cursor:pointer" style-active="background:rgba(32,30,29,0.07)">
+                <div style="font-weight:800;min-width:40px">{{sd.short}}</div>
+                <div style="flex:1;color:#605d5d;font-size:13px">{{sd.owner}}</div>
+                <div style="font-weight:600;font-variant-numeric:tabular-nums">{{sd.area}}</div>
+                <sc-if value="{{sd.delta}}"><div style="font-size:12px;font-weight:800;padding:1px 6px;background:{{sd.dbg}};color:{{sd.dfg}}">{{sd.delta}}</div></sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{pc.steps}}">
+          <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:2px solid rgba(32,30,29,0.4)">
+            <sc-for list="{{pc.steps}}" as="sp">
+              <div style="display:flex;flex-direction:column;gap:4px;padding:8px 6px 0 0;border-top:3px solid {{sp.bar}};margin-top:-2px">
+                <div style="font-size:12px;font-weight:800;color:{{sp.fg}}">{{sp.n}}</div>
+                <div style="font-size:12px;line-height:1.25;color:{{sp.fg}}">{{sp.label}}</div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{pc.note}}">
+          <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:{{pc.note.fg}}"><i class="{{pc.note.icon}}" style="font-size:16px"></i><span style="text-wrap:pretty">{{pc.note.text}}</span></div>
+        </sc-if>
+
+        <sc-if value="{{pc.actions}}">
+          <div style="display:flex;gap:8px">
+            <sc-for list="{{pc.actions}}" as="a">
+              <div onClick="{{a.onClick}}" style="flex:{{a.flex}};min-width:0;display:flex;align-items:center;gap:8px;height:48px;padding:0 14px;cursor:pointer;font-weight:800;font-size:14px;white-space:nowrap;background:{{a.bg}};color:{{a.fg}};border:1px solid {{a.bd}};opacity:{{a.op}}" style-active="filter:brightness(0.9)"><i class="{{a.icon}}" style="font-size:18px;flex:none"></i><span style="overflow:hidden;text-overflow:ellipsis">{{a.label}}</span></div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{pc.rows}}">
+          <div style="display:flex;flex-direction:column">
+            <div style="font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#605d5d;padding-bottom:6px;border-bottom:2px solid rgba(32,30,29,0.4)">{{pc.rowsTitle}}</div>
+            <sc-for list="{{pc.rows}}" as="r">
+              <div style="display:flex;justify-content:space-between;gap:12px;min-height:40px;align-items:center;border-bottom:1px solid rgba(32,30,29,0.25)"><span style="color:#605d5d">{{r.k}}</span><span style="font-weight:600;text-align:right;font-variant-numeric:tabular-nums">{{r.v}}</span></div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{pc.list}}">
+          <div style="display:flex;flex-direction:column">
+            <div style="display:grid;grid-template-columns:48px minmax(0,1fr) auto 72px;gap:8px;font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#605d5d;padding-bottom:6px;border-bottom:2px solid rgba(32,30,29,0.4)"><span>No</span><span>Hissedar</span><span>Alan</span><span style="text-align:right">Fark</span></div>
+            <sc-for list="{{pc.list}}" as="it">
+              <div onClick="{{it.onClick}}" style="display:grid;grid-template-columns:48px minmax(0,1fr) auto 72px;gap:8px;align-items:center;min-height:48px;border-bottom:1px solid rgba(32,30,29,0.25);cursor:pointer;font-variant-numeric:tabular-nums" style-hover="background:rgba(32,30,29,0.05)">
+                <span style="font-weight:800">{{it.short}}</span>
+                <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#605d5d">{{it.owner}}</span>
+                <span style="font-weight:600">{{it.area}}</span>
+                <span style="justify-self:end;font-size:12px;font-weight:800;padding:1px 6px;background:{{it.dbg}};color:{{it.dfg}}">{{it.diff}}</span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{isPhone}}">
+    <div style="position:absolute;left:0;right:0;bottom:0;height:{{L.bH}}px;background:#f3f2f2;border-top:2px solid rgba(32,30,29,0.4);display:flex;justify-content:center">
+      <div style="flex:1;max-width:560px;display:flex;padding:6px 6px 0;gap:4px;height:62px">
+        <sc-for list="{{tools}}" as="t">
+          <div onClick="{{t.onClick}}" style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;padding-left:10px;cursor:pointer;background:{{t.bg}};color:{{t.fg}};border-top:3px solid {{t.bar}}"><i class="{{t.icon}}" style="font-size:21px"></i><span style="font-size:12px;font-weight:600">{{t.label}}</span></div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{snack.show}}">
+    <div style="position:absolute;left:{{pos.snX}}px;width:{{pos.snW}}px;top:{{pos.snY}}px;display:flex;align-items:center;gap:8px;min-height:48px;padding:0 4px 0 16px;background:#201e1d;color:#f3f2f2;box-shadow:0 12px 32px rgba(45,43,43,0.22)">
+      <i class="icon-check" style="font-size:16px"></i>
+      <div style="flex:1;font-size:14px;font-weight:600;padding:10px 0;text-wrap:pretty">{{snack.msg}}</div>
+      <div onClick="{{snackAct}}" style="height:40px;display:flex;align-items:center;padding:0 12px;font-weight:800;color:#ff9783;cursor:pointer">{{snack.action}}</div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{menu.show}}">
+    <div onClick="{{closeMenu}}" style="position:absolute;inset:0;background:{{menu.scrim}}"></div>
+    <div style="position:absolute;left:{{menu.x}}px;top:{{menu.y}}px;width:{{menu.w}}px;display:flex;flex-direction:column;background:#f3f2f2;border-top:2px solid #201e1d;box-shadow:0 12px 32px rgba(45,43,43,0.22);padding-bottom:{{menu.pb}}px">
+      <div style="display:flex;flex-direction:column;gap:2px;padding:14px 16px 10px;border-bottom:2px solid rgba(32,30,29,0.4)">
+        <div style="font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#605d5d">{{menu.kicker}}</div>
+        <div style="font-size:17px;font-weight:800">{{menu.title}}</div>
+      </div>
+      <sc-for list="{{menu.items}}" as="mi">
+        <div onClick="{{mi.onClick}}" style="display:flex;align-items:center;gap:12px;min-height:{{menu.rowH}}px;padding:6px 16px;cursor:pointer;border-bottom:1px solid rgba(32,30,29,0.2);color:{{mi.fg}};opacity:{{mi.op}}" style-hover="background:rgba(32,30,29,0.06)">
+          <i class="{{mi.icon}}" style="font-size:19px;width:20px;flex:none"></i>
+          <div style="flex:1;display:flex;flex-direction:column;gap:1px"><div style="font-weight:600;font-size:15px">{{mi.label}}</div><sc-if value="{{mi.sub}}"><div style="font-size:12px;color:#605d5d;text-wrap:pretty">{{mi.sub}}</div></sc-if></div>
+          <sc-if value="{{mi.checked}}"><i class="icon-check" style="font-size:18px;color:#ec3013"></i></sc-if>
+          <sc-if value="{{mi.chev}}"><i class="icon-chevron-right" style="font-size:18px;color:#605d5d"></i></sc-if>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{cf.show}}">
+    <div onClick="{{cancelConfirm}}" style="position:absolute;inset:0;background:rgba(45,43,43,0.28)"></div>
+    <div style="position:absolute;left:{{cf.x}}px;top:{{cf.y}}px;width:{{cf.w}}px;display:flex;flex-direction:column;gap:12px;padding:20px 16px {{cf.pb}}px;background:#f3f2f2;border-top:2px solid #ec3013;box-shadow:0 12px 32px rgba(45,43,43,0.22)">
+      <div style="display:flex;align-items:center;gap:8px"><i class="icon-merge" style="font-size:20px;color:#ec3013"></i><div style="font-size:18px;font-weight:800">Parselleri birleştir</div></div>
+      <div style="font-size:15px;text-wrap:pretty">{{cf.text}}</div>
+      <div style="font-size:13px;color:#605d5d;font-variant-numeric:tabular-nums">{{cf.sub}}</div>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <div onClick="{{cancelConfirm}}" style="flex:1;display:flex;align-items:center;height:48px;padding:0 14px;border:1px solid rgba(32,30,29,0.4);font-weight:800;cursor:pointer">İptal</div>
+        <div onClick="{{doConfirm}}" style="flex:1;display:flex;align-items:center;gap:8px;height:48px;padding:0 14px;background:#ec3013;color:#f3f2f2;font-weight:800;cursor:pointer" style-active="background:#ae1800"><i class="icon-merge" style="font-size:18px"></i>Birleştir</div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:844},&quot;device&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;phone&quot;,&quot;tabletPortrait&quot;,&quot;tablet&quot;,&quot;desktop&quot;],&quot;default&quot;:&quot;phone&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;idle&quot;,&quot;parcel&quot;,&quot;edge&quot;,&quot;vertex&quot;,&quot;vdrag&quot;,&quot;invalid&quot;,&quot;edrag&quot;,&quot;split1&quot;,&quot;split2&quot;,&quot;sheetFull&quot;,&quot;3d&quot;,&quot;more&quot;,&quot;undo&quot;,&quot;locked&quot;,&quot;merge&quot;,&quot;addv&quot;,&quot;empty&quot;,&quot;draw&quot;],&quot;default&quot;:&quot;idle&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+const ACC='#ec3013',ACC1='#fff2ef',ACC2='#ffe0d9',ACC7='#ae1800',BAD='#7c1405',INK='#201e1d',INK2='#605d5d';
+const LINE='rgba(32,30,29,0.4)';
+const POS='#1f6b43',POSB='#e3f0e7',WRN='#8a5200',WRNB='#fbecd0';
+const FILLS=['#f8f6f6','#f0eeee','#f5f3f2'];
+const nf0=new Intl.NumberFormat('tr-TR',{maximumFractionDigits:0});
+const nf1=new Intl.NumberFormat('tr-TR',{minimumFractionDigits:1,maximumFractionDigits:1});
+const nf2=new Intl.NumberFormat('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fA=a=>nf0.format(Math.round(a))+' m²';
+const fDn=a=>nf2.format(a/1000)+' dönüm';
+const fD=d=>{const r=Math.round(d);return (r>0?'+':r<0?'−':'±')+nf0.format(Math.abs(r))+' m²'};
+const fL=l=>nf1.format(l)+' m';
+const K=(a,b)=>a<b?a+'|'+b:b+'|'+a;
+const hyp=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+const ease=t=>1-Math.pow(1-t,3);
+function sArea(p){let s=0;for(let i=0;i<p.length;i++){const a=p[i],b=p[(i+1)%p.length];s+=a.x*b.y-b.x*a.y}return s/2}
+function cen(p){let A=0,x=0,y=0;for(let i=0;i<p.length;i++){const a=p[i],b=p[(i+1)%p.length],f=a.x*b.y-b.x*a.y;A+=f;x+=(a.x+b.x)*f;y+=(a.y+b.y)*f}if(Math.abs(A)<1e-6){return {x:p.reduce((s,q)=>s+q.x,0)/p.length,y:p.reduce((s,q)=>s+q.y,0)/p.length}}return {x:x/(3*A),y:y/(3*A)}}
+function ori(a,b,c){return (b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x)}
+function segX(a,b,c,d){const e=1e-9,o1=ori(a,b,c),o2=ori(a,b,d),o3=ori(c,d,a),o4=ori(c,d,b);return ((o1>e&&o2<-e)||(o1<-e&&o2>e))&&((o3>e&&o4<-e)||(o3<-e&&o4>e))}
+function pip(p,q){let c=false;for(let i=0,j=q.length-1;i<q.length;j=i++){const a=q[i],b=q[j];if(((a.y>p.y)!==(b.y>p.y))&&(p.x<(b.x-a.x)*(p.y-a.y)/(b.y-a.y)+a.x))c=!c}return c}
+function segD(p,a,b){const dx=b.x-a.x,dy=b.y-a.y,l=dx*dx+dy*dy;let t=l?((p.x-a.x)*dx+(p.y-a.y)*dy)/l:0;t=Math.max(0,Math.min(1,t));return {d:Math.hypot(p.x-a.x-t*dx,p.y-a.y-t*dy),t,x:a.x+t*dx,y:a.y+t*dy}}
+function edgesOf(ps){const m={};ps.forEach(p=>{const r=p.ring;for(let i=0;i<r.length;i++){const a=r[i],b=r[(i+1)%r.length],k=K(a,b);(m[k]||(m[k]={k,a:a<b?a:b,b:a<b?b:a,ps:[]})).ps.push(p.id)}});return m}
+const pts=(V,r)=>r.map(id=>V[id]);
+function areasOf(V,ps){const o={};ps.forEach(p=>o[p.id]=Math.abs(sArea(pts(V,p.ring))));return o}
+function validate(V,ps,sg){const E=Object.values(edgesOf(ps));for(let i=0;i<E.length;i++)for(let j=i+1;j<E.length;j++){const e=E[i],f=E[j];if(e.a===f.a||e.a===f.b||e.b===f.a||e.b===f.b)continue;if(segX(V[e.a],V[e.b],V[f.a],V[f.b]))return 'Sınırlar birbirini kesemez.'}for(const p of ps){const a=sArea(pts(V,p.ring))*sg;if(a<=0)return 'Bu konum parseli geçersiz hale getiriyor.';if(a<60)return 'Parsel alanı çok küçüldü.'}return null}
+function insertOnEdge(ps,a,b,id){return ps.map(p=>{const r=p.ring.slice();for(let i=0;i<r.length;i++){const x=r[i],y=r[(i+1)%r.length];if((x===a&&y===b)||(x===b&&y===a)){r.splice(i+1,0,id);break}}return {...p,ring:r}})}
+function rot(r,s){const i=r.indexOf(s);return r.slice(i).concat(r.slice(0,i))}
+function mergeRings(rA,rB,a,b){let s,t;for(let i=0;i<rA.length;i++){const x=rA[i],y=rA[(i+1)%rA.length];if((x===a&&y===b)||(x===b&&y===a)){s=x;t=y;break}}const pA=rot(rA,t),pB=rot(rB,s);let r=pA.concat(pB.slice(1,-1));let ch=true;while(ch&&r.length>3){ch=false;const n=r.length;for(let i=0;i<n;i++){if(r[i]===r[(i+1)%n]){r.splice(i,1);ch=true;break}if(r[(i-1+n)%n]===r[(i+1)%n]){const j=[i,(i+1)%n].sort((x,y)=>y-x);j.forEach(q=>r.splice(q,1));ch=true;break}}}return r}
+function initials(n){return n?n.split(' ').map(w=>w[0]).join('').slice(0,2).toLocaleUpperCase('tr-TR'):''}
+function sample(){
+  const A={x:0,y:0},B={x:150,y:-8},C={x:160,y:110},D={x:-6,y:116};
+  const L=(p,q,t,c)=>({x:p.x+(q.x-p.x)*t,y:p.y+(q.y-p.y)*t,c});
+  const V={A:{...A,c:'fixed'},B:{...B,c:'fixed'},C:{...C,c:'fixed'},D:{...D,c:'fixed'},
+    T1:L(A,B,.33,['A','B']),T2:L(A,B,.67,['A','B']),R1:L(B,C,.33,['B','C']),R2:L(B,C,.67,['B','C']),
+    U1:L(D,C,.33,['D','C']),U2:L(D,C,.67,['D','C']),L1:L(A,D,.33,['A','D']),L2:L(A,D,.67,['A','D']),
+    M11:{x:49,y:37,c:null},M12:{x:102,y:34,c:null},M21:{x:48,y:76,c:null},M22:{x:104,y:73,c:null}};
+  const P=(n,ring,owner,share,use,h)=>({id:'p'+n,num:n,name:'Parsel '+n,ring,owner,share,use,h});
+  const parcels=[P(11,['A','T1','M11','L1'],'Mehmet Kaya',12,'Konut',7),P(12,['T1','T2','M12','M11'],'Ahmet Yılmaz',11,'Konut',9),P(13,['T2','B','R1','M12'],'Ayşe Demir',11,'Ticari',13),
+    P(14,['L1','M11','M21','L2'],'Fatma Şahin',11,'Konut',6),P(15,['M11','M12','M22','M21'],'Ali Öztürk',11,'Tarım',3),P(16,['M12','R1','R2','M22'],'Zeynep Arslan',11,'Konut',8),
+    P(17,['L2','M21','U1','D'],'Hasan Çelik',11,'Yeşil alan',2),P(18,['M21','M22','U2','U1'],'Elif Koç',11,'Tarım',3),P(19,['M22','R2','C','U2'],'Murat Aydın',11,'Ticari',11)];
+  const land=['A','B','C','D'];const la=sArea(pts(V,land));const c=cen(pts(V,land));
+  return {verts:V,parcels,land,orient:Math.sign(la),landArea:Math.abs(la),cx:c.x,cy:c.y,nextNum:20,nextV:1};
+}
+class Component extends DCLogic {
+  rootRef=React.createRef(); cvRef=React.createRef(); ptrs=new Map(); g=null;
+  state={...sample(),sel:null,tool:'select',split:null,addPrev:null,drawPts:[],empty:false,view:{x:0,y:0,k:2},t3d:0,yaw:-0.55,tiltAmt:0.45,sheet:'collapsed',sheetDrag:null,drag:null,undo:[],redo:[],snack:null,hint:null,menu:null,confirm:null,locked:[],showAreas:true,showLengths:false,hover:null,W:0,H:0};
+  componentDidMount(){
+    this.ro=new ResizeObserver(en=>{const r=en[0].contentRect;if(!r.width)return;if(Math.abs(r.width-this.state.W)<1&&Math.abs(r.height-this.state.H)<1)return;const first=!this.inited;this.setState({W:r.width,H:r.height},()=>{if(first){this.inited=true;this.initScenario()}else this.setState({view:this.fitView(this.state,this.state.t3d)})})});
+    if(this.rootRef.current){this.obsEl=this.rootRef.current;this.ro.observe(this.obsEl)}
+    let tries=0;const poll=()=>{const el=this.rootRef.current;if(el&&el!==this.obsEl){this.ro.disconnect();this.ro.observe(el);this.obsEl=el}if(!this.inited&&el){const r=el.getBoundingClientRect();if(r.width>0){this.inited=true;this.setState({W:r.width,H:r.height},()=>this.initScenario());return}}if(!this.inited&&tries++<240)this.raf0=requestAnimationFrame(poll)};this.raf0=requestAnimationFrame(poll);
+
+    this.wheel=e=>{if(!(e.ctrlKey||e.metaKey||this.props.device==='desktop'))return;e.preventDefault();const r=this.cvRef.current.getBoundingClientRect();this.zoomAt(e.clientX-r.left,e.clientY-r.top,Math.exp(-e.deltaY*(e.ctrlKey?0.01:0.002)))};
+    this.cvRef.current&&this.cvRef.current.addEventListener('wheel',this.wheel,{passive:false});
+  }
+  componentDidUpdate(){const el=this.rootRef.current;if(!el)return;if(el!==this.obsEl&&this.ro){this.ro.disconnect();this.ro.observe(el);this.obsEl=el}if(!this.inited){const w=el.offsetWidth,h=el.offsetHeight;if(w){this.inited=true;this.setState({W:w,H:h},()=>this.initScenario())}}}
+  componentWillUnmount(){this.ro&&this.ro.disconnect();this.cvRef.current&&this.cvRef.current.removeEventListener('wheel',this.wheel);clearTimeout(this.snT);clearTimeout(this.hT);clearTimeout(this.lpT);cancelAnimationFrame(this.raf);cancelAnimationFrame(this.raf0)}
+  // ---------- layout ----------
+  lay(st){const d=this.props.device||'phone',W=st.W||390,H=st.H||844;
+    if(d==='phone'||d==='tabletPortrait'){const sH=d==='phone'?44:24,tH=56,bH=d==='phone'?84:70;const pw=d==='phone'?W:Math.min(W,600);return {d,phone:true,W,H,statusH:sH,tH,bH,cv:{l:0,t:sH+tH,w:W,h:H-sH-tH-bH},pw,pl:(W-pw)/2}}
+    const sH=d==='tablet'?24:0,tH=56,pw=d==='tablet'?Math.round(W*0.29):340;return {d,phone:false,W,H,statusH:sH,tH,bH:0,cv:{l:0,t:sH+tH,w:W-pw,h:H-sH-tH},pw,pl:W-pw}}
+  levels(L){const full=Math.max(380,L.cv.h-40);return {collapsed:92,half:Math.min(348,Math.round(L.cv.h*0.55)),full}}
+  kind(st){if(st.tool==='draw')return 'draw';if(st.tool==='split'&&st.split&&st.split.pid)return 'split';if(st.addPrev)return 'addv';if(st.drag)return 'drag';return st.sel?st.sel.type:'none'}
+  sheetH(st,L){if(!L.phone)return L.cv.h;if(st.empty&&st.tool!=='draw')return 0;const k=this.kind(st);if(k==='split')return 250;if(k==='addv'||k==='draw')return 190;if(k==='drag')return 92;if(st.sheetDrag!=null)return st.sheetDrag;return this.levels(L)[st.sheet]||92}
+  insets(st,L){if(L.phone){return {l:24,r:24,t:72,b:Math.min(this.sheetH(st,L),260)+24}}if(L.d==='tablet')return {l:110,r:80,t:64,b:40};return {l:48,r:88,t:56,b:48}}
+  proj(st){const t=st.t3d,yw=st.yaw*t,c=Math.cos(yw),s=Math.sin(yw),tilt=1-st.tiltAmt*t,cx=st.cx,cy=st.cy,k=st.view.k,ox=st.view.x,oy=st.view.y;
+    return (x,y,z)=>{const dx=x-cx,dy=y-cy,rx=dx*c-dy*s,ry=dx*s+dy*c;return {x:(cx+rx)*k+ox,y:(cy+ry*tilt)*k+oy-(z||0)*k*t*0.8,d:ry}}}
+  fitView(st,t){const L=this.lay(st);const P=this.proj({...st,t3d:t,view:{x:0,y:0,k:1}});let a=[];const V=st.verts;
+    if(st.empty&&st.drawPts.length>1)a=st.drawPts.map(p=>P(p.x,p.y));
+    st.land.forEach(id=>{a.push(P(V[id].x,V[id].y,0));if(t>0)a.push(P(V[id].x,V[id].y,14))});
+    const x0=Math.min(...a.map(p=>p.x)),x1=Math.max(...a.map(p=>p.x)),y0=Math.min(...a.map(p=>p.y)),y1=Math.max(...a.map(p=>p.y));
+    const I=this.insets(st,L),aw=L.cv.w-I.l-I.r,ah=L.cv.h-I.t-I.b,k=Math.max(0.3,Math.min(aw/(x1-x0),ah/(y1-y0)));
+    return {k,x:I.l+(aw-(x1-x0)*k)/2-x0*k,y:I.t+(ah-(y1-y0)*k)/2-y0*k}}
+  doFit=()=>{this.animView(this.fitView(this.state,this.state.t3d))};
+  animView(v1,t1,dur){cancelAnimationFrame(this.raf);const v0={...this.state.view},t0=this.state.t3d,T=t1==null?t0:t1,D=dur||410,s=performance.now();
+    const f=now=>{const u=Math.min(1,(now-s)/D),e=ease(u);this.setState({view:{x:v0.x+(v1.x-v0.x)*e,y:v0.y+(v1.y-v0.y)*e,k:v0.k+(v1.k-v0.k)*e},t3d:t0+(T-t0)*e});if(u<1)this.raf=requestAnimationFrame(f)};this.raf=requestAnimationFrame(f)}
+  toWorld(x,y){const v=this.state.view;return {x:(x-v.x)/v.k,y:(y-v.y)/v.k}}
+  zoomAt(x,y,f){this.setState(s=>{const k=Math.max(0.4,Math.min(40,s.view.k*f)),r=k/s.view.k;return {view:{k,x:x-(x-s.view.x)*r,y:y-(y-s.view.y)*r}}})}
+  zoomIn=()=>{const L=this.lay(this.state);this.zoomAt(L.cv.w/2,L.cv.h/2,1.4)};
+  zoomOut=()=>{const L=this.lay(this.state);this.zoomAt(L.cv.w/2,L.cv.h/2,1/1.4)};
+  // ---------- scenarios ----------
+  initScenario(){const s=this.state,sc=this.props.scenario||'idle',V=s.verts,kTM=K('T2','M12');let p={};
+    const mv=(id,x,y)=>({...V,[id]:{...V[id],x,y}});
+    const base=()=>({before:areasOf(V,s.parcels),v0:V});
+    switch(sc){
+      case 'parcel':p={sel:{type:'parcel',id:'p12'},sheet:'half'};break;
+      case 'sheetFull':p={sel:{type:'parcel',id:'p12'},sheet:'full'};break;
+      case 'more':p={sel:{type:'parcel',id:'p12'},sheet:'half',menu:{kind:'parcel'}};break;
+      case 'edge':p={sel:{type:'edge',id:kTM},sheet:'half'};break;
+      case 'merge':p={sel:{type:'edge',id:kTM},sheet:'half',confirm:{a:'p12',b:'p13',key:kTM}};break;
+      case 'locked':p={sel:{type:'edge',id:K('T1','T2')},sheet:'half'};break;
+      case 'vertex':p={sel:{type:'vertex',id:'M12'},sheet:'half'};break;
+      case 'vdrag':p={verts:mv('M11',56,43),sel:{type:'vertex',id:'M11'},drag:{kind:'vertex',id:'M11',...base(),start:{x:49,y:37},frozen:true}};break;
+      case 'invalid':{const g={x:108,y:58};const tr=mv('M11',g.x,g.y);p={verts:mv('M11',54,41),sel:{type:'vertex',id:'M11'},drag:{kind:'vertex',id:'M11',...base(),start:{x:49,y:37},ghost:g,msg:validate(tr,s.parcels,s.orient)||'Sınırlar birbirini kesemez.',frozen:true}};break}
+      case 'edrag':{const e=this.edgeInfo(s,kTM);const nv=this.shiftEdge(s,V,e,7);p={verts:nv||V,sel:{type:'edge',id:kTM},drag:{kind:'edge',id:kTM,...base(),n:e.n,off:7,frozen:true}};break}
+      case 'split1':p={tool:'split',sel:{type:'parcel',id:'p15'},split:{pid:'p15',p1:null,p2:null,cur:1}};break;
+      case 'split2':{const a=V.M11,b=V.M21,c=V.M12,d=V.M22;p={tool:'split',sel:{type:'parcel',id:'p15'},split:{pid:'p15',cur:2,p1:{edge:K('M11','M21'),x:(a.x+b.x)/2,y:(a.y+b.y)/2},p2:{edge:K('M12','M22'),x:(c.x+d.x)/2,y:(c.y+d.y)/2}}};break}
+      case '3d':p={sel:{type:'parcel',id:'p12'},sheet:'half',t3d:1};break;
+      case 'undo':{const moved=mv('M11',56,43);p={redo:[{verts:moved,parcels:s.parcels,label:'Köşe hareketi'}],snack:{msg:'Köşe hareketi geri alındı',action:'İleri Al',fn:'redo'}};break}
+      case 'addv':p={sel:{type:'edge',id:K('M11','M12')},addPrev:{key:K('M11','M12'),t:0.4}};break;
+      case 'empty':p={empty:true};break;
+      case 'draw':p={empty:true,tool:'draw',drawPts:[{x:0,y:0},{x:150,y:-8},{x:160,y:110}]};break;
+    }
+    this.setState(p,()=>{this.setState({view:this.fitView(this.state,this.state.t3d)})});
+  }
+  // ---------- geometry ops ----------
+  edgeMap(st){return edgesOf(st.parcels)}
+  edgeInfo(st,key){const e=this.edgeMap(st)[key];if(!e)return null;const V=st.verts,a=V[e.a],b=V[e.b],l=hyp(a,b);return {...e,len:l,n:{x:-(b.y-a.y)/l,y:(b.x-a.x)/l},mid:{x:(a.x+b.x)/2,y:(a.y+b.y)/2}}}
+  isLockedEdge(st,key){const e=this.edgeMap(st)[key];return !e||e.ps.length<2||st.locked.includes(key)}
+  vLocked(st,id){const v=st.verts[id];if(!v||v.c==='fixed')return true;return st.locked.some(k=>k.split('|').includes(id))}
+  moveAlong(V,id,p0,n,d){const c=V[id].c;if(c==='fixed')return null;if(!c)return {x:p0.x+n.x*d,y:p0.y+n.y*d};const A=V[c[0]],B=V[c[1]],l=hyp(A,B),ux=(B.x-A.x)/l,uy=(B.y-A.y)/l,dn=ux*n.x+uy*n.y;if(Math.abs(dn)<0.15)return null;const s=d/dn;let x=p0.x+ux*s,y=p0.y+uy*s;const t=Math.max(0.02,Math.min(0.98,((x-A.x)*ux+(y-A.y)*uy)/l));return {x:A.x+ux*t*l,y:A.y+uy*t*l}}
+  edgeDraggable(st,key){if(this.isLockedEdge(st,key))return false;const e=this.edgeInfo(st,key);const V=st.verts;return !!(this.moveAlong(V,e.a,V[e.a],e.n,0.001)&&this.moveAlong(V,e.b,V[e.b],e.n,0.001))&&!this.vLocked(st,e.a)&&!this.vLocked(st,e.b)}
+  shiftEdge(st,V0,e,d){const a=this.moveAlong(V0,e.a,V0[e.a],e.n,d),b=this.moveAlong(V0,e.b,V0[e.b],e.n,d);if(!a||!b)return null;return {...V0,[e.a]:{...V0[e.a],...a},[e.b]:{...V0[e.b],...b}}}
+  constrainV(V,id,p){const c=V[id].c;if(!c)return p;const A=V[c[0]],B=V[c[1]],r=segD(p,A,B),t=Math.max(0.02,Math.min(0.98,r.t));return {x:A.x+(B.x-A.x)*t,y:A.y+(B.y-A.y)*t}}
+  constraintFor(st,key,pt){const e=this.edgeMap(st)[key];if(!e||e.ps.length>1)return null;const Ld=st.land,V=st.verts;for(let i=0;i<Ld.length;i++){const a=V[Ld[i]],b=V[Ld[(i+1)%Ld.length]];if(segD(pt,a,b).d<0.6)return [Ld[i],Ld[(i+1)%Ld.length]]}return null}
+  commit(patch,label){this.setState(s=>({undo:[...s.undo.slice(-40),{verts:s.verts,parcels:s.parcels,label}],redo:[],...patch}))}
+  showSnack(msg,action,fn){clearTimeout(this.snT);this.setState({snack:{msg,action,fn}});this.snT=setTimeout(()=>this.setState({snack:null}),4500)}
+  showHint(text){clearTimeout(this.hT);this.setState({hint:{text}});this.hT=setTimeout(()=>this.setState({hint:null}),1800)}
+  doUndo=()=>{const s=this.state;if(!s.undo.length)return;const e=s.undo[s.undo.length-1];this.setState({undo:s.undo.slice(0,-1),redo:[...s.redo,{verts:s.verts,parcels:s.parcels,label:e.label}],verts:e.verts,parcels:e.parcels,drag:null,split:null,addPrev:null,tool:'select',sel:this.keepSel(s.sel,e.parcels,e.verts)});this.showSnack(e.label+' geri alındı','İleri Al','redo')};
+  doRedo=()=>{const s=this.state;if(!s.redo.length)return;const e=s.redo[s.redo.length-1];this.setState({redo:s.redo.slice(0,-1),undo:[...s.undo,{verts:s.verts,parcels:s.parcels,label:e.label}],verts:e.verts,parcels:e.parcels,drag:null,sel:this.keepSel(s.sel,e.parcels,e.verts)});this.showSnack(e.label+' yeniden uygulandı','Geri Al','undo')};
+  keepSel(sel,ps,V){if(!sel)return null;if(sel.type==='parcel')return ps.some(p=>p.id===sel.id)?sel:null;if(sel.type==='edge')return edgesOf(ps)[sel.id]?sel:null;return ps.some(p=>p.ring.includes(sel.id))?sel:null}
+  snackAct=()=>{const f=this.state.snack&&this.state.snack.fn;this.setState({snack:null});if(f==='redo')this.doRedo();else if(f==='undo')this.doUndo()};
+  insertVertex(key,pt){const s=this.state,e=this.edgeMap(s)[key];const id='N'+s.nextV;const c=this.constraintFor(s,key,pt);const V={...s.verts,[id]:{x:pt.x,y:pt.y,c}};const ps=insertOnEdge(s.parcels,e.a,e.b,id);this.commit({verts:V,parcels:ps,nextV:s.nextV+1,sel:{type:'vertex',id},sheet:'half',tool:'select',addPrev:null},'Köşe ekleme');this.showSnack('Köşe eklendi · sürükleyerek taşıyın','Geri Al','undo')}
+  removeVertex(id){const s=this.state;const ps=s.parcels.map(p=>({...p,ring:p.ring.filter(x=>x!==id)}));const m=validate(s.verts,ps,s.orient);if(m){this.showHint(m);return}this.commit({parcels:ps,sel:null,sheet:'collapsed'},'Köşe kaldırma');this.showSnack('Köşe kaldırıldı','Geri Al','undo')}
+  neighborsOfV(st,id){const n=new Set();Object.values(this.edgeMap(st)).forEach(e=>{if(e.a===id)n.add(e.b);if(e.b===id)n.add(e.a)});return [...n]}
+  mergeParcels(key){const s=this.state,e=this.edgeMap(s)[key];if(!e||e.ps.length<2)return;const A=s.parcels.find(p=>p.id===e.ps[0]),B=s.parcels.find(p=>p.id===e.ps[1]);const ring=mergeRings(A.ring,B.ring,e.a,e.b);const np={...A,ring,share:A.share+B.share,owner:A.owner,h:Math.max(A.h,B.h)};const ps=s.parcels.filter(p=>p.id!==B.id).map(p=>p.id===A.id?np:p);this.commit({parcels:ps,sel:{type:'parcel',id:A.id},sheet:'half',confirm:null},'Birleştirme');this.showSnack(A.name+' ve '+B.name+' birleştirildi','Geri Al','undo')}
+  buildSplit(st){const sp=st.split;if(!sp||!sp.p1||!sp.p2)return null;let V={...st.verts},ps=st.parcels,nv=st.nextV;const ids=[];const E=this.edgeMap(st);
+    for(const q of [sp.p1,sp.p2]){if(q.vid){ids.push(q.vid);continue}const e=E[q.edge];const id='N'+(nv++);V[id]={x:q.x,y:q.y,c:this.constraintFor(st,q.edge,q)};ps=insertOnEdge(ps,e.a,e.b,id);ids.push(id)}
+    const P=ps.find(p=>p.id===sp.pid),r=P.ring,i1=r.indexOf(ids[0]),i2=r.indexOf(ids[1]);if(i1<0||i2<0)return null;const cyc=(i,j)=>{const o=[];let k=i;for(;;){o.push(r[k]);if(k===j)break;k=(k+1)%r.length}return o};
+    const rA=cyc(i1,i2),rB=cyc(i2,i1);return {V,ps,rA,rB,ids,nv,P}}
+  splitCheck(st){const sp=st.split;if(!sp||!sp.p1||!sp.p2)return null;const a=sp.p1,b=sp.p2;if(hyp(a,b)<0.5)return {msg:'Farklı iki nokta seçin.'};
+    if(a.edge&&b.edge&&a.edge===b.edge)return {msg:'Noktalar aynı sınır üzerinde olamaz.'};
+    const onE=(q,k)=>q.edge===k||(q.vid&&k.split('|').includes(q.vid));const E=Object.values(this.edgeMap(st)).filter(e=>e.ps.includes(sp.pid));
+    if(E.some(e=>onE(a,e.k)&&onE(b,e.k)))return {msg:'Noktalar aynı sınır üzerinde olamaz.'};
+    const P=st.parcels.find(p=>p.id===sp.pid),poly=pts(st.verts,P.ring);if(!pip({x:(a.x+b.x)/2,y:(a.y+b.y)/2},poly))return {msg:'Bölme çizgisi parselin dışına taşıyor.'};
+    const V=st.verts;for(const e of Object.values(this.edgeMap(st))){if(onE(a,e.k)||onE(b,e.k))continue;if(segX(a,b,V[e.a],V[e.b]))return {msg:'Bölme çizgisi başka bir sınırı kesiyor.'}}
+    const r=this.buildSplit(st);if(!r)return {msg:'Bu bölme yapılamıyor.'};const A1=Math.abs(sArea(pts(r.V,r.rA))),A2=Math.abs(sArea(pts(r.V,r.rB)));if(Math.min(A1,A2)<60)return {msg:'Parsellerden biri çok küçük kalıyor.',A1,A2};return {ok:true,A1,A2}}
+  doSplit=()=>{const s=this.state,c=this.splitCheck(s);if(!c||!c.ok)return;const r=this.buildSplit(s);const big=Math.abs(sArea(pts(r.V,r.rA)))>=Math.abs(sArea(pts(r.V,r.rB)));const keep=big?r.rA:r.rB,give=big?r.rB:r.rA;
+    const n=s.nextNum;const np={id:'p'+n,num:n,name:'Parsel '+n,ring:give,owner:'',share:0,use:r.P.use,h:r.P.h};const ps=r.ps.map(p=>p.id===r.P.id?{...p,ring:keep}:p).concat([np]);
+    this.commit({verts:r.V,parcels:ps,nextV:r.nv,nextNum:n+1,tool:'select',split:null,sel:{type:'parcel',id:np.id},sheet:'half'},'Bölme');this.showSnack(r.P.name+' ikiye bölündü','Geri Al','undo')};
+  // ---------- hit testing ----------
+  hit(x,y,precise){const s=this.state;if(s.empty)return null;const P=this.proj(s),V=s.verts,rv=precise?12:24,re=precise?8:18;const used=new Set();s.parcels.forEach(p=>p.ring.forEach(id=>used.add(id)));
+    let bv=null,bd=1e9;used.forEach(id=>{const q=P(V[id].x,V[id].y);const d=Math.hypot(q.x-x,q.y-y);if(d<bd){bd=d;bv=id}});if(bd<rv)return {type:'vertex',id:bv};
+    if(s.sel&&s.sel.type==='edge'){const e=this.edgeInfo(s,s.sel.id);if(e){const m=P(e.mid.x,e.mid.y);if(Math.hypot(m.x-x,m.y-y)<rv+4)return {type:'edge',id:e.k}}}
+    let be=null;bd=1e9;Object.values(this.edgeMap(s)).forEach(e=>{const a=P(V[e.a].x,V[e.a].y),b=P(V[e.b].x,V[e.b].y),r=segD({x,y},a,b);if(r.d<bd){bd=r.d;be=e.k}});if(bd<re)return {type:'edge',id:be};
+    const w=this.toWorld(x,y);const p=s.parcels.find(p=>pip(w,pts(V,p.ring)));return p?{type:'parcel',id:p.id}:null}
+  hit3d(x,y){const s=this.state,P=this.proj(s),V=s.verts;const order=this.order3d(s,P);for(let i=order.length-1;i>=0;i--){const p=order[i];const poly=p.ring.map(id=>P(V[id].x,V[id].y,p.h));if(pip({x,y},poly))return {type:'parcel',id:p.id}}return null}
+  order3d(s,P){const V=s.verts;return s.parcels.map(p=>{const c=cen(pts(V,p.ring));return {...p,dd:P(c.x,c.y).d}}).sort((a,b)=>a.dd-b.dd)}
+  // ---------- pointer ----------
+  local(e){const r=this.cvRef.current.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top}}
+  onDown=e=>{if(e.button===2)return;const s=this.state;const p=this.local(e);try{e.currentTarget.setPointerCapture(e.pointerId)}catch(_){ }
+    this.ptrs.set(e.pointerId,p);if(this.ptrs.size===2){this.startPinch();return}if(this.ptrs.size>2)return;
+    if(s.drag&&s.drag.frozen)this.setState({drag:null});if(s.menu)this.setState({menu:null});
+    const precise=e.pointerType!=='touch';this.g={type:'pending',x0:p.x,y0:p.y,lx:p.x,ly:p.y,precise,hit:s.empty?null:(s.t3d>0?this.hit3d(p.x,p.y):this.hit(p.x,p.y,precise)),moved:false};
+    if(s.t3d===0&&s.tool==='split'&&s.split&&s.split.pid){this.g.type='splitPlace';this.splitPlace(p.x,p.y,true);return}
+    if(s.addPrev){const h=this.addPrevPt(s);const P=this.proj(s),q=P(h.x,h.y);if(Math.hypot(q.x-p.x,q.y-p.y)<(precise?16:30)){this.g.type='addPrev';return}}
+    if(s.tool==='select'&&this.g.hit&&e.pointerType!=='mouse'){clearTimeout(this.lpT);this.lpT=setTimeout(()=>{const g=this.g;if(g&&g.type==='pending'&&!g.moved){g.type='done';this.selectHit(g.hit,true)}},500)}
+  };
+  onMove=e=>{const p=this.local(e);if(!this.ptrs.has(e.pointerId)){if(e.pointerType!=='touch'&&this.state.t3d===0){const h=this.hit(p.x,p.y,true);const hk=h?h.type+h.id:null;if(hk!==(this.state.hover&&this.state.hover.k))this.setState({hover:h?{...h,k:hk}:null})}return}
+    this.ptrs.set(e.pointerId,p);const g=this.g;if(!g)return;if(g.type==='pinch'){this.doPinch();return}
+    const s=this.state;
+    if(g.type==='pending'){if(Math.hypot(p.x-g.x0,p.y-g.y0)<(g.precise?4:8))return;g.moved=true;clearTimeout(this.lpT);const h=g.hit;
+      if(s.t3d>0)g.type='orbit';
+      else if(s.tool==='select'&&h&&h.type==='vertex'){if(this.vLocked(s,h.id)){g.type='blocked';this.showHint(s.verts[h.id].c==='fixed'?'Arazi köşesi sabit':'Köşe kilitli bir sınıra bağlı')}else this.startV(h.id,g)}
+      else if(s.tool==='select'&&h&&h.type==='edge'){if(!this.edgeDraggable(s,h.id)){g.type='blocked';this.showHint(this.isLockedEdge(s,h.id)?'Sabit sınır taşınamaz':'Bu sınır bu yönde taşınamaz')}else this.startE(h.id,g)}
+      else g.type='pan'}
+    if(g.type==='pan'){const dx=p.x-g.lx,dy=p.y-g.ly;this.setState(s=>({view:{...s.view,x:s.view.x+dx,y:s.view.y+dy}}))}
+    else if(g.type==='orbit'){const dx=p.x-g.lx,dy=p.y-g.ly;this.setState(s=>({yaw:s.yaw+dx*0.008,tiltAmt:Math.max(0.2,Math.min(0.7,s.tiltAmt+dy*0.003))}))}
+    else if(g.type==='vdrag')this.moveV(p);else if(g.type==='edrag')this.moveE(p);else if(g.type==='splitPlace')this.splitPlace(p.x,p.y,false);
+    else if(g.type==='addPrev'){const e2=this.edgeInfo(s,s.addPrev.key),V=s.verts,w=this.toWorld(p.x,p.y),r=segD(w,V[e2.a],V[e2.b]);this.setState({addPrev:{...s.addPrev,t:Math.max(0.05,Math.min(0.95,r.t))}})}
+    g.lx=p.x;g.ly=p.y};
+  onUp=e=>{if(!this.ptrs.has(e.pointerId))return;this.ptrs.delete(e.pointerId);clearTimeout(this.lpT);const g=this.g;if(!g)return;
+    if(g.type==='pinch'){if(this.ptrs.size===1){const q=[...this.ptrs.values()][0];this.g={type:'pan',lx:q.x,ly:q.y,moved:true}}else if(!this.ptrs.size)this.g=null;return}
+    if(g.type==='pending'&&!g.moved)this.tap(g);
+    if(g.type==='vdrag'||g.type==='edrag')this.endDrag();
+    if(g.type==='splitPlace')this.setState(s=>({split:{...s.split,cur:s.split.p1&&!s.split.p2?2:s.split.cur}}));
+    if(!this.ptrs.size)this.g=null};
+  onLeave=e=>{if(!this.ptrs.size&&this.state.hover)this.setState({hover:null})};
+  onCtx=e=>{e.preventDefault();const s=this.state;if(s.t3d>0||s.empty)return;const p=this.local(e);const h=this.hit(p.x,p.y,true);if(!h)return;this.selectHit(h);const L=this.lay(s);this.setState({menu:{kind:h.type,x:p.x+L.cv.l,y:p.y+L.cv.t}})};
+  startPinch(){const s=this.state,g=this.g;if(g&&(g.type==='vdrag'||g.type==='edrag')&&s.drag){this.setState({verts:s.drag.v0,drag:null})}clearTimeout(this.lpT);const [a,b]=[...this.ptrs.values()];this.g={type:'pinch',d0:Math.hypot(a.x-b.x,a.y-b.y)||1,m0:{x:(a.x+b.x)/2,y:(a.y+b.y)/2},v0:{...s.view}}}
+  doPinch(){const g=this.g,[a,b]=[...this.ptrs.values()];const d=Math.hypot(a.x-b.x,a.y-b.y),m={x:(a.x+b.x)/2,y:(a.y+b.y)/2};const k=Math.max(0.4,Math.min(40,g.v0.k*d/g.d0)),r=k/g.v0.k;this.setState({view:{k,x:g.m0.x-(g.m0.x-g.v0.x)*r+(m.x-g.m0.x),y:g.m0.y-(g.m0.y-g.v0.y)*r+(m.y-g.m0.y)}})}
+  tap(g){const s=this.state,h=g.hit;
+    if(s.tool==='draw'){this.drawTap(g);return}
+    if(s.t3d>0){this.selectHit(h);return}
+    if(s.tool==='addv'){let key=h&&h.type==='edge'?h.id:null;if(!key){const P=this.proj(s),V=s.verts;let bd=1e9;Object.values(this.edgeMap(s)).forEach(e=>{const r=segD({x:g.x0,y:g.y0},P(V[e.a].x,V[e.a].y),P(V[e.b].x,V[e.b].y));if(r.d<bd){bd=r.d;key=e.k}});if(bd>(g.precise?14:30))key=null}
+      if(!key){this.showHint('Köşe eklemek için bir sınıra dokunun');return}if(this.isLockedEdge(s,key)&&this.edgeMap(s)[key].ps.length>1){this.showHint('Kilitli sınıra köşe eklenemez');return}
+      const e=this.edgeInfo(s,key),V=s.verts,r=segD(this.toWorld(g.x0,g.y0),V[e.a],V[e.b]);const t=Math.max(0.05,Math.min(0.95,r.t));this.insertVertex(key,{x:V[e.a].x+(V[e.b].x-V[e.a].x)*t,y:V[e.a].y+(V[e.b].y-V[e.a].y)*t});return}
+    if(s.tool==='split'&&!(s.split&&s.split.pid)){const w=this.toWorld(g.x0,g.y0);const p=s.parcels.find(p=>pip(w,pts(s.verts,p.ring)));if(p)this.setState({sel:{type:'parcel',id:p.id},split:{pid:p.id,p1:null,p2:null,cur:1}});return}
+    this.selectHit(h)}
+  selectHit(h,long){const s=this.state,L=this.lay(s);if(!h){this.setState({sel:null,sheet:'collapsed',addPrev:null});return}
+    const sheet=s.sheet==='full'?'full':'half';this.setState({sel:{type:h.type,id:h.id},sheet,addPrev:null});if(long&&L.phone)this.setState({menu:{kind:h.type}})}
+  startV(id,g){const s=this.state,w=this.toWorld(g.x0,g.y0),v=s.verts[id];g.type='vdrag';g.off={x:v.x-w.x,y:v.y-w.y};this.setState({sel:{type:'vertex',id},drag:{kind:'vertex',id,v0:s.verts,before:areasOf(s.verts,s.parcels),start:{x:v.x,y:v.y}}})}
+  moveV(p){const s=this.state,d=s.drag,g=this.g;const w=this.toWorld(p.x,p.y);let t={x:w.x+g.off.x,y:w.y+g.off.y};t=this.constrainV(s.verts,d.id,t);const tr={...s.verts,[d.id]:{...s.verts[d.id],...t}};const m=validate(tr,s.parcels,s.orient);
+    if(!m)this.setState({verts:tr,drag:{...d,ghost:null,msg:null}});else this.setState({drag:{...d,ghost:t,msg:m}})}
+  startE(key,g){const s=this.state,e=this.edgeInfo(s,key);g.type='edrag';g.w0=this.toWorld(g.x0,g.y0);this.setState({sel:{type:'edge',id:key},drag:{kind:'edge',id:key,v0:s.verts,before:areasOf(s.verts,s.parcels),n:e.n,e,off:0}})}
+  moveE(p){const s=this.state,d=s.drag,g=this.g,w=this.toWorld(p.x,p.y);const off=(w.x-g.w0.x)*d.n.x+(w.y-g.w0.y)*d.n.y;const nv=this.shiftEdge(s,d.v0,d.e,off);if(!nv)return;const m=validate(nv,s.parcels,s.orient);
+    if(!m)this.setState({verts:nv,drag:{...d,off,ghost:null,msg:null}});else{const a=nv[d.e.a],b=nv[d.e.b];this.setState({drag:{...d,ghost:{a,b},msg:m}})}}
+  endDrag(){const s=this.state,d=s.drag;if(!d)return;const moved=s.verts!==d.v0;if(moved)this.setState({undo:[...s.undo.slice(-40),{verts:d.v0,parcels:s.parcels,label:d.kind==='vertex'?'Köşe hareketi':'Sınır hareketi'}],redo:[]});this.setState({drag:null});if(d.ghost)this.showHint('Son geçerli konuma döndü')}
+  splitPlace(x,y,isDown){const s=this.state,sp=s.split;const P=this.proj(s),V=s.verts,par=s.parcels.find(p=>p.id===sp.pid);const w=this.toWorld(x,y);
+    let slot=sp.cur;if(isDown&&sp.p1&&sp.p2){const q1=P(sp.p1.x,sp.p1.y),q2=P(sp.p2.x,sp.p2.y);slot=Math.hypot(q1.x-x,q1.y-y)<Math.hypot(q2.x-x,q2.y-y)?1:2;this.g.slot=slot}else if(!isDown&&this.g.slot)slot=this.g.slot;else if(isDown)this.g.slot=slot;
+    let best=null,bd=1e9;par.ring.forEach(id=>{const q=P(V[id].x,V[id].y),d=Math.hypot(q.x-x,q.y-y);if(d<bd){bd=d;best={vid:id,x:V[id].x,y:V[id].y}}});
+    if(bd>22){best=null;bd=1e9;for(let i=0;i<par.ring.length;i++){const a=par.ring[i],b=par.ring[(i+1)%par.ring.length],r=segD(w,V[a],V[b]);if(r.d<bd){bd=r.d;best={edge:K(a,b),x:r.x,y:r.y}}}}
+    this.setState({split:{...sp,['p'+slot]:best}})}
+  addPrevPt(s){const e=this.edgeInfo(s,s.addPrev.key),V=s.verts,t=s.addPrev.t;return {x:V[e.a].x+(V[e.b].x-V[e.a].x)*t,y:V[e.a].y+(V[e.b].y-V[e.a].y)*t}}
+  confirmAddV=()=>{const s=this.state;this.insertVertex(s.addPrev.key,this.addPrevPt(s))};
+  drawTap(g){const s=this.state,w=this.toWorld(g.x0,g.y0),P=this.proj(s);if(s.drawPts.length>=3){const f=P(s.drawPts[0].x,s.drawPts[0].y);if(Math.hypot(f.x-g.x0,f.y-g.y0)<28){this.finishDraw();return}}this.setState({drawPts:[...s.drawPts,w]})}
+  finishDraw=()=>{const s=this.state;if(s.drawPts.length<3)return;let pp=s.drawPts.slice();if(sArea(pp)<0)pp.reverse();const V={},ids=[];pp.forEach((p,i)=>{const id='L'+i;V[id]={x:p.x,y:p.y,c:'fixed'};ids.push(id)});const la=sArea(pts(V,ids)),c=cen(pts(V,ids));
+    this.setState({verts:V,land:ids,orient:1,landArea:Math.abs(la),cx:c.x,cy:c.y,parcels:[{id:'p1',num:1,name:'Parsel 1',ring:ids,owner:'',share:100,use:'—',h:4}],empty:false,tool:'select',drawPts:[],undo:[],redo:[],sel:{type:'parcel',id:'p1'},sheet:'half',nextNum:2},()=>this.doFit());this.showSnack('Arazi oluşturuldu · Böl ile parselleyin')};
+  startDraw=()=>this.setState({tool:'draw',drawPts:[]});
+  importSample=()=>{const s0=sample();this.setState({...s0,empty:false,tool:'select',sel:null,undo:[],redo:[]},()=>this.doFit());this.showSnack('Örnek arazi içe aktarıldı')};
+  // ---------- tools / menus ----------
+  setTool(id){const s=this.state;if(id==='view'){this.setState({menu:{kind:'view'}});return}if(id==='more'){this.setState({menu:{kind:s.sel?s.sel.type:'top'}});return}
+    if(s.empty&&id!=='select'){this.showHint('Önce arazi sınırı oluşturun');return}
+    if(s.t3d>0&&id!=='select'){this.showHint('Düzenleme için 2D görünüme geçin');return}
+    if(id==='select')this.setState({tool:'select',split:null,addPrev:null});
+    if(id==='addv')this.setState({tool:'addv',split:null,addPrev:null,sel:s.sel&&s.sel.type==='edge'?s.sel:null});
+    if(id==='split'){const pid=s.sel&&s.sel.type==='parcel'?s.sel.id:null;this.setState({tool:'split',addPrev:null,split:{pid,p1:null,p2:null,cur:1}})}}
+  exitTool=()=>{if(this.state.tool==='draw'){this.setState({tool:'select',drawPts:[]});return}this.setState({tool:'select',split:null,addPrev:null})};
+  set3d(on){const s=this.state;if(on&&s.tool!=='select')this.setState({tool:'select',split:null,addPrev:null});if(on&&s.sel&&s.sel.type!=='parcel')this.setState({sel:null});const T=on?1:0;this.animView(this.fitView({...this.state},T),T,520)}
+  openTopMenu=()=>this.setState({menu:{kind:'top'}});
+  closeMenu=()=>this.setState({menu:null});
+  cancelConfirm=()=>this.setState({confirm:null});
+  doConfirm=()=>{const c=this.state.confirm;if(c)this.mergeParcels(c.key)};
+  askMerge(key){const e=this.edgeMap(this.state)[key];if(!e||e.ps.length<2)return;this.setState({menu:null,confirm:{a:e.ps[0],b:e.ps[1],key}})}
+  toggleLock(key){this.setState(s=>({locked:s.locked.includes(key)?s.locked.filter(k=>k!==key):[...s.locked,key],menu:null}))}
+  menuItems(st,kind){const sel=st.sel,M=(icon,label,act,o)=>({icon,label,onClick:()=>{this.setState({menu:null});act&&act()},sub:'',checked:false,chev:false,fg:INK,op:1,...(o||{})});
+    const par=sel&&sel.type==='parcel'?st.parcels.find(p=>p.id===sel.id):null;
+    if(kind==='parcel'&&par){const E=Object.values(this.edgeMap(st)).filter(e=>e.ps.length===2&&e.ps.includes(par.id));
+      return {kicker:'Parsel',title:par.name,items:[M('icon-pencil','Bilgileri düzenle',()=>this.setState({sheet:'full'}),{sub:'Ad, kullanım, notlar'}),M('icon-user-round','Hissedar ata',()=>this.setState({sheet:'full'}),{sub:par.owner||'Atanmamış'}),M('icon-scissors','Böl',()=>this.setTool('split')),
+        M('icon-merge','Komşuyla birleştir',()=>this.setState({menu:{kind:'neighbors'}}),{chev:true,sub:E.length+' komşu parsel',op:E.length?1:0.45}),M('icon-trash-2','Sil',null,{sub:'Silmek boşluk bırakır — komşu parselle birleştirin',op:0.45})]}}
+    if(kind==='neighbors'&&par){const E=Object.values(this.edgeMap(st)).filter(e=>e.ps.length===2&&e.ps.includes(par.id));const seen={};const items=[];E.forEach(e=>{const o=e.ps.find(x=>x!==par.id);if(seen[o])return;seen[o]=1;const q=st.parcels.find(p=>p.id===o);items.push(M('icon-merge',q.name,()=>this.askMerge(e.k),{sub:q.owner||'Atanmamış'}))});return {kicker:par.name+' ile birleştir',title:'Komşu parsel seçin',items}}
+    if(kind==='edge'&&sel){const e=this.edgeMap(st)[sel.id];if(!e)return null;const lk=st.locked.includes(sel.id),outer=e.ps.length<2;
+      return {kicker:'Sınır',title:this.edgeName(st,sel.id),items:[M('icon-circle-plus','Köşe ekle',()=>this.setState({addPrev:{key:sel.id,t:0.5}}),{op:lk?0.45:1}),M('icon-merge','Parselleri birleştir',()=>this.askMerge(sel.id),{op:outer?0.45:1,sub:outer?'Dış sınırın tek tarafında parsel var':''}),M('icon-ruler','Sınır uzunlukları',()=>this.setState(s=>({showLengths:!s.showLengths})),{checked:st.showLengths}),M(lk?'icon-lock-open':'icon-lock',lk?'Kilidi aç':'Kilitle',()=>!outer&&this.toggleLock(sel.id),{op:outer?0.45:1,sub:outer?'Dış sınır her zaman sabit':''})]}}
+    if(kind==='vertex'&&sel){const n=this.neighborsOfV(st,sel.id).length,v=st.verts[sel.id],ok=n===2&&v.c!=='fixed';return {kicker:'Köşe',title:this.vName(st,sel.id),items:[M('icon-circle-minus','Köşeyi kaldır',()=>ok&&this.removeVertex(sel.id),{op:ok?1:0.45,sub:ok?'':'Birden fazla sınırı bağlayan köşe kaldırılamaz'}),M('icon-scan','Köşeye odaklan',()=>{const L=this.lay(st),P=this.proj(st),q=P(v.x,v.y);this.setState(s=>({view:{...s.view,x:s.view.x+L.cv.w/2-q.x,y:s.view.y+L.cv.h/3-q.y}}))})]}}
+    if(kind==='view')return {kicker:'Görünüm',title:'Harita ayarları',items:[M('icon-square','2D · düzenleme',()=>this.set3d(false),{checked:st.t3d<0.5}),M('icon-box','3D · görselleştirme',()=>this.set3d(true),{checked:st.t3d>=0.5}),M('icon-tag','Alan etiketleri',()=>this.setState(s=>({showAreas:!s.showAreas})),{checked:st.showAreas}),M('icon-ruler','Sınır uzunlukları',()=>this.setState(s=>({showLengths:!s.showLengths})),{checked:st.showLengths}),M('icon-scan','Araziye sığdır',this.doFit)]};
+    return {kicker:'Proje',title:'Karaağaç Arazisi',items:[M('icon-scan','Araziye sığdır',this.doFit),M('icon-tag','Alan etiketleri',()=>this.setState(s=>({showAreas:!s.showAreas})),{checked:st.showAreas}),M('icon-ruler','Sınır uzunlukları',()=>this.setState(s=>({showLengths:!s.showLengths})),{checked:st.showLengths}),M('icon-file-down','Dışa aktar',null,{sub:'PDF paftası, DXF, KML'}),M('icon-file-plus','Yeni arazi',()=>this.setState({empty:true,tool:'select',sel:null,split:null,addPrev:null}),{sub:'Boş durumu göster'})]}}
+  vName(st,id){const ids=[];st.parcels.forEach(p=>p.ring.forEach(x=>{if(!ids.includes(x))ids.push(x)}));return 'Köşe K'+(ids.indexOf(id)+1)}
+  edgeName(st,key){return 'Sınır S'+(Object.keys(this.edgeMap(st)).indexOf(key)+1)}
+  targets(st){const o={};st.parcels.forEach(p=>o[p.id]=p.share?Math.round(p.share/100*st.landArea/5)*5:null);return o}
+  diffStyle(d,tgt){if(tgt==null)return {fg:INK2,bg:'#eae9e9',icon:'icon-minus',text:'—'};const r=Math.round(d);if(Math.abs(r)<=Math.max(5,tgt*0.005))return {fg:POS,bg:POSB,icon:'icon-check',text:'Hedefte'};return r<0?{fg:WRN,bg:WRNB,icon:'icon-arrow-down',text:fD(d)}:{fg:WRN,bg:WRNB,icon:'icon-arrow-up',text:fD(d)}}
+  sheetDown=e=>{const L=this.lay(this.state);if(!L.phone||['split','addv','draw','drag'].includes(this.kind(this.state)))return;try{e.currentTarget.setPointerCapture(e.pointerId)}catch(_){ }this.sd={y0:e.clientY,h0:this.sheetH(this.state,L),t0:performance.now(),moved:false}};
+  sheetMove=e=>{if(!this.sd)return;const dy=e.clientY-this.sd.y0;if(Math.abs(dy)>4)this.sd.moved=true;if(!this.sd.moved)return;const L=this.lay(this.state),lv=this.levels(L);this.setState({sheetDrag:Math.max(lv.collapsed-20,Math.min(lv.full+20,this.sd.h0-dy))})};
+  sheetUp=e=>{const sd=this.sd;if(!sd)return;this.sd=null;const s=this.state,L=this.lay(s),lv=this.levels(L);const order=['collapsed','half','full'];
+    if(!sd.moved){const i=order.indexOf(s.sheet);this.setState({sheet:order[(i+1)%3],sheetDrag:null});return}
+    const h=s.sheetDrag,v=(e.clientY-sd.y0)/Math.max(1,performance.now()-sd.t0);let best='collapsed',bd=1e9;order.forEach(k=>{const d=Math.abs(lv[k]-h);if(d<bd){bd=d;best=k}});
+    if(Math.abs(v)>0.5){const cur=order.indexOf(s.sheet);best=order[Math.max(0,Math.min(2,v<0?cur+1:cur-1))]}this.setState({sheet:best,sheetDrag:null})};
+  // ---------- scene ----------
+  scene(st,L,P,E,areas){const o={faces:[],polys:[],lines:[],dots:[],tris:[],labels:[],chips:[]};const pstr=a=>a.map(q=>q.x.toFixed(1)+','+q.y.toFixed(1)).join(' ');
+    const ln=(a,b,c,w,dash,cap)=>o.lines.push({x1:a.x,y1:a.y,x2:b.x,y2:b.y,c,w,dash:dash||'none',cap:cap||'round'});
+    const dot=(q,s,fill,stroke,sw,round,dash)=>o.dots.push({x:q.x-s/2,y:q.y-s/2,s,rx:round===false?0:s/2,fill,stroke,sw,dash:dash||'none'});
+    const chip=(q,text,icon,fg,bg,bd)=>o.chips.push({x:q.x,y:q.y,text,icon:icon||'',hasIcon:!!icon,fg:fg||INK,bg:bg||'#f3f2f2',bd:bd||LINE});
+    const arrow=(c,u,s,fill)=>{const px=-u.y,py=u.x;o.tris.push({pts:pstr([{x:c.x+u.x*s,y:c.y+u.y*s},{x:c.x-u.x*s*0.1+px*s*0.7,y:c.y-u.y*s*0.1+py*s*0.7},{x:c.x-u.x*s*0.1-px*s*0.7,y:c.y-u.y*s*0.1-py*s*0.7}]),fill})};
+    if(st.empty){if(st.tool==='draw'){const q=st.drawPts.map(p=>P(p.x,p.y));for(let i=0;i+1<q.length;i++)ln(q[i],q[i+1],INK,2.5);if(q.length>=3)ln(q[q.length-1],q[0],ACC,2,'6 6');q.forEach((p,i)=>{if(i===0&&q.length>=3)dot(p,34,'rgba(236,48,19,0.14)','none',0);dot(p,i===0?14:10,i===0?ACC:'#f3f2f2',i===0?'#f3f2f2':INK,2,false)});if(q.length>=3)chip({x:q[0].x,y:q[0].y-30},'Kapatmak için dokun','icon-circle-dot',ACC7,ACC1,ACC)}return o}
+    const V=st.verts,sel=st.sel,dr=st.drag,t=st.t3d,k=st.view.k;const tg=this.targets(st);const num=p=>'P'+p.num;
+    const lab=(p,q,i)=>{const a=areas[p.id],r=Math.sqrt(a)*k;const isSel=sel&&sel.type==='parcel'&&sel.id===p.id;const ini=initials(p.owner);let dl=null;if(dr&&dr.before[p.id]!=null){const d=a-dr.before[p.id];if(Math.abs(d)>=0.5)dl=d}
+      if(r<26)return;o.labels.push({x:q.x,y:q.y,name:num(p)+(ini?' · '+ini:''),c:isSel?ACC7:INK2,showArea:st.showAreas&&r>64,area:fA(a),hasDelta:dl!=null,delta:dl!=null?fD(dl):'',dfg:dl>0?POS:WRN,dbg:dl>0?POSB:WRNB})};
+    if(t>0){const Ld=st.land.map(id=>P(V[id].x,V[id].y,0));o.faces.push({pts:pstr(Ld),fill:'#d2cece',stroke:'none',sw:0});
+      const yw=st.yaw*t,cs=Math.cos(yw),sn=Math.sin(yw);
+      this.order3d(st,P).forEach((p,i)=>{const isSel=sel&&sel.type==='parcel'&&sel.id===p.id;const r=p.ring;const walls=[];
+        for(let j=0;j<r.length;j++){const a=V[r[j]],b=V[r[(j+1)%r.length]];let nx=(b.y-a.y),ny=-(b.x-a.x);const l=Math.hypot(nx,ny)||1;nx/=l;ny/=l;const rny=nx*sn+ny*cs,rnx=nx*cs-ny*sn;if(rny*st.orient<=0.02)continue;
+          const lum=0.5+0.5*(rnx*-0.6+rny*0.8)*st.orient;const g0=isSel?[255,196,184]:[186,182,182],g1=isSel?[255,224,217]:[224,221,221];const cc=g0.map((v,m)=>Math.round(v+(g1[m]-v)*lum));
+          walls.push({d:(P(a.x,a.y).d+P(b.x,b.y).d)/2,pts:pstr([P(a.x,a.y,0),P(b.x,b.y,0),P(b.x,b.y,p.h),P(a.x,a.y,p.h)]),fill:'rgb('+cc.join(',')+')',stroke:isSel?ACC:'#7d7979',sw:isSel?1.5:0.75})}
+        walls.sort((x,y)=>x.d-y.d).forEach(w=>o.faces.push(w));const top=r.map(id=>P(V[id].x,V[id].y,p.h));o.faces.push({pts:pstr(top),fill:isSel?ACC1:FILLS[(p.num)%3],stroke:isSel?ACC:'#605d5d',sw:isSel?2.5:1});
+        const c=cen(pts(V,r));lab(p,P(c.x,c.y,p.h))});return o}
+    st.parcels.forEach(p=>{const isSel=(sel&&sel.type==='parcel'&&sel.id===p.id)||(st.split&&st.split.pid===p.id);o.polys.push({pts:pstr(p.ring.map(id=>P(V[id].x,V[id].y))),fill:isSel?ACC1:FILLS[p.num%3]})});
+    const act=new Set();if(dr){if(dr.kind==='vertex')act.add(dr.id);else{const e=E[dr.id];if(e){act.add(e.a);act.add(e.b)}}}
+    const hov=st.hover;const selEdge=sel&&sel.type==='edge'?sel.id:null;
+    Object.values(E).forEach(e=>{const a=P(V[e.a].x,V[e.a].y),b=P(V[e.b].x,V[e.b].y);const outer=e.ps.length<2,lk=st.locked.includes(e.k);
+      if(e.k===selEdge)return;let c=outer?INK:'#7d7979',w=outer?3:1.5,dash=lk?'6 4':'none';if(act.has(e.a)||act.has(e.b)){c=ACC;w=2.5}if(hov&&hov.type==='edge'&&hov.id===e.k&&!dr){w+=1.5;c=outer?INK:INK2}ln(a,b,c,w,dash,'butt')});
+    if(sel&&sel.type==='parcel'){const p=st.parcels.find(x=>x.id===sel.id);if(p){const r=p.ring;for(let i=0;i<r.length;i++){ln(P(V[r[i]].x,V[r[i]].y),P(V[r[(i+1)%r.length]].x,V[r[(i+1)%r.length]].y),ACC,2.5,'none','round')}}}
+    if(selEdge&&E[selEdge]){const e=this.edgeInfo(st,selEdge),a=P(V[e.a].x,V[e.a].y),b=P(V[e.b].x,V[e.b].y);const lk=this.isLockedEdge(st,selEdge);const drg=!lk&&this.edgeDraggable(st,selEdge);
+      if(lk){ln(a,b,'rgba(32,30,29,0.18)',12,'none','butt');ln(a,b,INK,4,'8 5','butt')}else{ln(a,b,'rgba(236,48,19,0.16)',14,'none','round');ln(a,b,ACC,4.5,'none','round')}
+      const m=P(e.mid.x,e.mid.y);const sp=this.proj(st);const n2=(()=>{const q=sp(e.mid.x+e.n.x,e.mid.y+e.n.y);const dx=q.x-m.x,dy=q.y-m.y,l=Math.hypot(dx,dy)||1;return {x:dx/l,y:dy/l}})();
+      if(lk)chip({x:m.x,y:m.y-22},'Sabit sınır','icon-lock',INK,'#f3f2f2',INK);
+      else if(drg&&!st.addPrev){const dragging=dr&&dr.kind==='edge';const gap=dragging?30:24;if(dragging){ln({x:m.x-n2.x*80,y:m.y-n2.y*80},{x:m.x+n2.x*80,y:m.y+n2.y*80},'rgba(236,48,19,0.45)',1.5,'3 5')}
+        arrow({x:m.x+n2.x*gap,y:m.y+n2.y*gap},n2,dragging?11:8,ACC);arrow({x:m.x-n2.x*gap,y:m.y-n2.y*gap},{x:-n2.x,y:-n2.y},dragging?11:8,ACC);dot(m,dragging?22:18,'#f3f2f2',ACC,3)}
+      const lpos={x:(a.x*0.25+b.x*0.75),y:(a.y*0.25+b.y*0.75)};chip({x:lpos.x+n2.x*16,y:lpos.y+n2.y*16},fL(e.len),null,INK,'#f3f2f2',LINE)}
+    if(dr&&dr.ghost){const gh=dr.ghost;if(dr.kind==='vertex'){const q=P(gh.x,gh.y);this.neighborsOfV(st,dr.id).forEach(n=>ln(q,P(V[n].x,V[n].y),BAD,2,'5 4'));dot(q,34,'url(#hatch)','none',0);dot(q,18,'rgba(124,20,5,0.12)',BAD,2,true,'3 2')}
+      else{const a=P(gh.a.x,gh.a.y),b=P(gh.b.x,gh.b.y);ln(a,b,BAD,3,'6 4')}}
+    if(st.showLengths&&k>1.2)Object.values(E).forEach(e=>{if(e.k===selEdge)return;const a=V[e.a],b=V[e.b],l=hyp(a,b);if(l*k<56)return;chip(P((a.x+b.x)/2,(a.y+b.y)/2),fL(l),null,INK2,'#f3f2f2','transparent')});
+    const used=new Set();st.parcels.forEach(p=>p.ring.forEach(id=>used.add(id)));const splitRing=st.split&&st.split.pid?new Set(st.parcels.find(p=>p.id===st.split.pid).ring):null;
+    used.forEach(id=>{const v=V[id],q=P(v.x,v.y);const fixed=v.c==='fixed';const isSel=sel&&sel.type==='vertex'&&sel.id===id;const isDrag=dr&&dr.kind==='vertex'&&dr.id===id;const isHov=hov&&hov.type==='vertex'&&hov.id===id;
+      if(isDrag){dot(q,48,'rgba(236,48,19,0.14)','none',0);dot(q,18,ACC,'#f3f2f2',3);return}
+      if(isSel){dot(q,40,'rgba(236,48,19,0.12)','none',0);dot(q,16,ACC,'#f3f2f2',2.5,!fixed);return}
+      if(selEdge&&selEdge.split('|').includes(id)){dot(q,11,'#f3f2f2',ACC,2.5,!fixed);return}
+      if(splitRing&&splitRing.has(id)){dot(q,10,'#f3f2f2',ACC,2,!fixed);return}
+      if(k<0.9&&!fixed)return;dot(q,isHov?12:(fixed?9:8),fixed?INK:'#f3f2f2',INK,1.5,!fixed)});
+    if(st.addPrev){const h=this.addPrevPt(st),q=P(h.x,h.y);dot(q,44,'rgba(236,48,19,0.14)','none',0);dot(q,18,ACC,'#f3f2f2',3);chip({x:q.x,y:q.y-32},'Yeni köşe','icon-move-horizontal',ACC7,ACC1,ACC)}
+    if(st.split&&st.split.pid){const sp=st.split,c=this.splitCheck(st);const ok=c&&c.ok;const col=!c?ACC:ok?ACC:BAD;const q1=sp.p1&&P(sp.p1.x,sp.p1.y),q2=sp.p2&&P(sp.p2.x,sp.p2.y);
+      if(q1&&q2){ln(q1,q2,ok?'#f3f2f2':'rgba(124,20,5,0.12)',7,'none','round');ln(q1,q2,col,2.5,'8 6','round')}
+      [q1,q2].forEach((q,i)=>{if(!q)return;dot(q,36,ok||!c?'rgba(236,48,19,0.12)':'rgba(124,20,5,0.12)','none',0);dot(q,16,col,'#f3f2f2',2.5);chip({x:q.x,y:q.y-26},i?'Bitiş':'Başlangıç',null,col===BAD?BAD:ACC7,col===BAD?'#fbe5e0':ACC1,col)});
+      if(ok&&q1&&q2){const r=this.buildSplit(st);[r.rA,r.rB].forEach(ring=>{const c2=cen(pts(r.V,ring)),q=P(c2.x,c2.y);chip({x:q.x,y:q.y+22},'≈ '+fA(Math.abs(sArea(pts(r.V,ring)))),'icon-square-dashed',ACC7,ACC1,ACC)})}}
+    st.parcels.forEach(p=>{const c=cen(pts(V,p.ring));lab(p,P(c.x,c.y))});
+    return o}
+  renderVals(){const st=this.state,L=this.lay(st),P=this.proj(st),E=this.edgeMap(st),areas=areasOf(st.verts,st.parcels),tg=this.targets(st);const sc=this.scene(st,L,P,E,areas);
+    const d=L.d,isTablet=d==='tablet',isDesktop=d==='desktop';const sh=this.sheetH(st,L);const k=st.view.k;const kind=this.kind(st);
+    const grid=(()=>{let s=10*k;if(s<14)s=50*k;return {s,x:st.view.x%s,y:st.view.y%s,o:st.empty?1:Math.max(0,1-st.t3d*1.5)}})();
+    const scale=(()=>{if(st.t3d>0.3||st.empty||(L.phone&&sh>L.cv.h-140))return {show:false};const nice=[2,5,10,20,50,100,200];const m=nice.find(n=>n*k>=64)||200;return {show:true,w:Math.round(m*k),text:m+' m'}})();
+    const tool=st.tool;const TL=[['select','icon-mouse-pointer-2','Seç'],['addv','icon-circle-plus','Köşe'],['split','icon-scissors','Böl'],['view','icon-layers','Görünüm'],['more','icon-ellipsis','Daha']];
+    const mk=(arr)=>arr.map(([id,icon,label])=>{const a=tool===id||(id==='view'&&st.menu&&st.menu.kind==='view');return {id,icon,label,bg:a?ACC1:'transparent',fg:a?ACC7:INK,bar:a?ACC:'transparent',onClick:()=>this.setTool(id)}});
+    const tools=mk(TL),toolsD=mk(TL.slice(0,3));
+    const seg=[['2D',false],['3D',true]].map(([label,on])=>{const a=(st.t3d>=0.5)===on;return {label,bg:a?ACC:'transparent',fg:a?'#f3f2f2':INK,onClick:()=>this.set3d(on)}});
+    const pos={};const cv=L.cv;
+    pos.segX=cv.l+cv.w-12-96;pos.segY=cv.t+12;pos.zoomX=cv.l+cv.w-16-46;pos.zoomY=cv.t+cv.h-16-140;pos.railY=cv.t+Math.max(16,(cv.h-300)/2);
+    pos.scaleX=cv.l+(isTablet?104:16);pos.scaleY=L.phone?cv.t+cv.h-sh-44:cv.t+cv.h-44;
+    if(L.phone){pos.insX=12;pos.insY=cv.t+12;pos.insW=L.W-24-108}else{pos.insX=cv.l+(isTablet?104:24);pos.insY=cv.t+16;pos.insW=Math.min(520,cv.w-(isTablet?104:24)-(isTablet?130:40))}
+    pos.snW=L.phone?Math.min(L.W-24,560):Math.min(420,cv.w-48);pos.snX=L.phone?(L.W-pos.snW)/2:cv.l+(cv.w-pos.snW)/2;pos.snY=L.phone?cv.t+cv.h-sh-60:cv.t+cv.h-72;
+    // instruction
+    let instr={show:false};const sp=st.split;const chk=sp&&sp.pid?this.splitCheck(st):null;
+    const I=(text,icon,step,closable,neg)=>({show:true,text,icon,step:step||'',closable:!!closable,bg:neg?'#fbe5e0':'#201e1d',fg:neg?BAD:'#f3f2f2'});
+    if(st.hint)instr=I(st.hint.text,'icon-info');
+    else if(tool==='draw')instr=I(st.drawPts.length>=3?'Kapatmak için ilk noktaya dokunun':'Her köşe için dokunun','icon-pen-tool',st.drawPts.length+' nokta',true);
+    else if(tool==='addv'&&!st.addPrev)instr=I('Köşe eklemek için bir sınıra dokunun','icon-circle-plus','',true);
+    else if(tool==='split'){if(!sp||!sp.pid)instr=I('Bölünecek parseli seçin','icon-scissors','',true);else if(!sp.p1)instr=I('İlk sınır noktasını seçin','icon-scissors','1/2',true);else if(!sp.p2)instr=I('İkinci sınır noktasını seçin','icon-scissors','2/2',true);else if(chk&&!chk.ok)instr=I(chk.msg,'icon-triangle-alert','',true,true);else instr=I('Önizlemeyi kontrol edip onaylayın','icon-scissors','',true)}
+    else if(st.t3d>0.5&&!L.phone)instr=I('Döndürmek için sürükleyin · düzenleme 2D’de','icon-rotate-3d');
+    // readout
+    let ro={show:false};if(st.drag){const dd=st.drag;if(dd.kind==='vertex'){const v=st.verts[dd.id];if(dd.ghost){const q=P(dd.ghost.x,dd.ghost.y);ro={show:true,x:q.x,y:q.y-30,text:dd.msg,icon:'icon-triangle-alert',fg:'#f3f2f2',bg:BAD}}else{const q=P(v.x,v.y);ro={show:true,x:q.x,y:q.y-34,text:'Δ '+fL(hyp(v,dd.start)),icon:'icon-move',fg:'#f3f2f2',bg:INK}}}
+      else{const e=this.edgeInfo(st,dd.id);if(e){const q=P(e.mid.x,e.mid.y);if(dd.ghost)ro={show:true,x:q.x,y:q.y-44,text:dd.msg,icon:'icon-triangle-alert',fg:'#f3f2f2',bg:BAD};else ro={show:true,x:q.x,y:q.y-44,text:(dd.off>=0?'+':'−')+fL(Math.abs(dd.off)),icon:'icon-move-vertical',fg:'#f3f2f2',bg:INK}}}}
+    // panel
+    const pc=this.panel(st,L,E,areas,tg,kind,chk);
+    const pn=L.phone?{l:L.pl,t:L.H-L.bH-sh,w:L.pw,h:sh,bt:'2px solid rgba(32,30,29,0.4)',bl:'0',sh:'0 -3px 10px rgba(45,43,43,0.10)',tr:st.sheetDrag!=null?'none':'top 410ms cubic-bezier(.2,0,0,1), height 410ms cubic-bezier(.2,0,0,1)',hp:'0 16px 8px'}:{l:L.pl,t:cv.t,w:L.pw,h:cv.h,bt:'0',bl:'2px solid rgba(32,30,29,0.4)',sh:'none',tr:'none',hp:'16px 16px 12px'};
+    // menu
+    let menu={show:false};if(st.menu){const mm=this.menuItems(st,st.menu.kind);if(mm){const rowH=L.phone?56:44;if(L.phone)menu={show:true,...mm,x:L.pl,w:L.pw,y:L.H-(mm.items.length*rowH+72+24),pb:24,rowH,scrim:'rgba(45,43,43,0.32)'};
+      else{const w=300;let x=st.menu.x!=null?st.menu.x:L.W-w-12,y=st.menu.y!=null?st.menu.y:L.statusH+L.tH+4;x=Math.min(x,L.W-w-8);y=Math.min(y,L.H-(mm.items.length*rowH+80));menu={show:true,...mm,x,y,w,pb:0,rowH,scrim:'transparent'}}}}
+    let cf={show:false};if(st.confirm){const A=st.parcels.find(p=>p.id===st.confirm.a),B=st.parcels.find(p=>p.id===st.confirm.b);if(A&&B){const tot=areas[A.id]+areas[B.id];const txt=A.name+' ve '+B.name+' birleştirilecek.';const sub='Yeni alan '+fA(tot)+' · '+fDn(tot)+' · Geri alınabilir';
+      cf=L.phone?{show:true,text:txt,sub,x:L.pl,w:L.pw,y:L.H-236,pb:28}:{show:true,text:txt,sub,w:380,x:cv.l+(cv.w-380)/2,y:cv.t+cv.h/2-110,pb:16}}}
+    const snack=st.snack?{show:true,...st.snack,action:st.snack.action||''}:{show:false};
+    let cursor='default';const g=this.g;if(g&&(g.type==='pan'||g.type==='vdrag'||g.type==='edrag'||g.type==='orbit'))cursor='grabbing';else if(st.tool==='split'||st.tool==='draw'||st.tool==='addv')cursor='crosshair';else if(st.hover)cursor=st.hover.type==='parcel'?'pointer':'grab';else cursor='grab';
+    const nP=st.parcels.length;
+    return {st,L,sc,grid,scale,tools,toolsD,seg,pos,instr,ro,pc,pn,menu,cf,snack,cursor,isTablet,isDesktop,
+      showSeg:!isDesktop&&!st.empty,showZoom:!L.phone&&!st.empty,showPanel:L.phone?sh>0:true,showEmptyCard:st.tool!=='draw',
+      topSub:st.empty?'Sınır tanımlı değil':'Ada 214 · '+nP+' parsel · '+fDn(st.landArea),
+      undoC:st.undo.length?INK:'#bab6b6',redoC:st.redo.length?INK:'#bab6b6',
+      rootRef:this.rootRef,isPhone:!!L.phone,dTopA:isDesktop,dTopB:isDesktop,cvRef:this.cvRef,onDown:this.onDown,onMove:this.onMove,onUp:this.onUp,onLeave:this.onLeave,onCtx:this.onCtx,
+      doUndo:this.doUndo,doRedo:this.doRedo,doFit:this.doFit,zoomIn:this.zoomIn,zoomOut:this.zoomOut,openTopMenu:this.openTopMenu,closeMenu:this.closeMenu,exitTool:this.exitTool,
+      snackAct:this.snackAct,cancelConfirm:this.cancelConfirm,doConfirm:this.doConfirm,sheetDown:this.sheetDown,sheetMove:this.sheetMove,sheetUp:this.sheetUp,startDraw:this.startDraw,importSample:this.importSample}}
+  panel(st,L,E,areas,tg,kind,chk){const pr=(icon,label,onClick,flex)=>({icon,label,onClick,flex:flex||1,bg:ACC,fg:'#f3f2f2',bd:ACC,op:1});const sc=(icon,label,onClick,flex,dis)=>({icon,label,onClick:dis?()=>{}:onClick,flex:flex||1,bg:'transparent',fg:INK,bd:LINE,op:dis?0.45:1});
+    const base={kicker:'',kc:INK2,title:'',value:'',valueSub:'',banner:null,target:null,sides:null,steps:null,note:null,actions:null,rows:null,rowsTitle:'',list:null};
+    const tgtBlock=p=>{const a=areas[p.id],t=tg[p.id];if(t==null)return null;const ds=this.diffStyle(a-t,t);const mx=Math.max(a,t)*1.08;return {cur:fA(a),tgt:fA(t),diff:ds.text,fg:ds.fg,icon:ds.icon,pct:Math.min(100,a/mx*100),mark:t/mx*100,bar:ds.fg===POS?POS:INK}};
+    const side=(pid)=>{const p=st.parcels.find(x=>x.id===pid);const dr=st.drag;let delta='',dfg=INK,dbg='transparent';if(dr&&dr.before[pid]!=null){const d=areas[pid]-dr.before[pid];if(Math.abs(d)>=0.5){delta=fD(d);dfg=d>0?POS:WRN;dbg=d>0?POSB:WRNB}}return {short:'P'+p.num,owner:p.owner||'Atanmamış',area:fA(areas[pid]),delta,dfg,dbg,onClick:()=>this.setState({sel:{type:'parcel',id:pid},sheet:'half'})}};
+    if(kind==='draw')return {...base,kicker:'Arazi çiz',title:st.drawPts.length+' köşe',value:st.drawPts.length>=3?fA(Math.abs(sArea(st.drawPts))):'—',note:{icon:'icon-info',fg:INK2,text:'Her köşe için haritaya dokunun. İlk noktaya dokunmak sınırı kapatır.'},actions:[sc('icon-x','İptal',this.exitTool),{...pr('icon-check','Araziyi Tamamla',this.finishDraw,1.6),op:st.drawPts.length>=3?1:0.45}]};
+    if(kind==='addv'){const e=this.edgeInfo(st,st.addPrev.key);const t=st.addPrev.t;return {...base,kicker:'Köşe ekle',title:this.edgeName(st,st.addPrev.key),value:fL(e.len*t)+' / '+fL(e.len*(1-t)),note:{icon:'icon-move-horizontal',fg:INK2,text:'Tutamacı sınır boyunca sürükleyerek konumlandırın.'},actions:[sc('icon-x','İptal',()=>this.setState({addPrev:null})),pr('icon-circle-plus','Ekle',this.confirmAddV,1.6)]}}
+    if(kind==='split'){const sp=st.split,p=st.parcels.find(x=>x.id===sp.pid);const stepN=!sp.p1?1:!sp.p2?2:3;const steps=[['1','Parsel seç'],['2','Başlangıç'],['3','Bitiş'],['4','Onayla']].map(([n,l],i)=>{const done=i<stepN,cur=i===stepN;return {n,label:l,bar:done||cur?ACC:'transparent',fg:done||cur?INK:INK2}});
+      const ok=chk&&chk.ok;return {...base,kicker:'Parseli böl',title:p.name,value:fA(areas[p.id]),valueSub:ok?'≈ '+fA(chk.A1)+' + '+fA(chk.A2):'',steps,note:chk&&!chk.ok?{icon:'icon-triangle-alert',fg:BAD,text:chk.msg}:{icon:'icon-info',fg:INK2,text:!sp.p1?'Parsel sınırında bir noktaya dokunun; en yakın sınıra yapışır.':!sp.p2?'Karşı sınırda ikinci noktaya dokunun.':'Noktaları sürükleyerek ayarlayabilirsiniz.'},
+        actions:[sc('icon-x','İptal',this.exitTool),{...pr('icon-scissors','Parseli Böl',this.doSplit,1.6),op:ok?1:0.45}]}}
+    if(kind==='drag'){const dr=st.drag;const ids=Object.keys(dr.before).filter(id=>Math.abs(areas[id]-dr.before[id])>=0.5);return {...base,kicker:dr.ghost?'Geçersiz konum':(dr.kind==='vertex'?'Köşe taşınıyor':'Sınır taşınıyor'),kc:dr.ghost?BAD:ACC7,title:ids.length?ids.map(id=>{const p=st.parcels.find(x=>x.id===id);return 'P'+p.num+' '+fD(areas[id]-dr.before[id])}).join('  ·  '):'—',value:''}}
+    if(kind==='parcel'){const p=st.parcels.find(x=>x.id===st.sel.id);if(!p)return base;const a=areas[p.id],t=tg[p.id];const nb=[...new Set(Object.values(E).filter(e=>e.ps.length===2&&e.ps.includes(p.id)).map(e=>e.ps.find(x=>x!==p.id)))].map(id=>'P'+st.parcels.find(x=>x.id===id).num);
+      const per=p.ring.reduce((s,id,i)=>s+hyp(st.verts[id],st.verts[p.ring[(i+1)%p.ring.length]]),0);const ds=this.diffStyle(a-(t||a),t);
+      return {...base,kicker:p.owner?p.owner:'Hissedar atanmamış',title:p.name,value:fA(a),valueSub:fDn(a),target:tgtBlock(p),
+        actions:[pr('icon-scissors','Böl',()=>this.setTool('split'),1.2),sc('icon-merge','Birleştir',()=>this.setState({menu:{kind:'neighbors'}})),sc('icon-ellipsis','Diğer',()=>this.setState({menu:{kind:'parcel'}}),0.8)],
+        rowsTitle:'Parsel bilgileri',rows:[{k:'Hissedar',v:p.owner||'—'},{k:'Pay',v:p.share?'%'+p.share:'—'},{k:'Hedef alan',v:t?fA(t)+' · '+fDn(t):'—'},{k:'Mevcut',v:fA(a)+' · '+fDn(a)},{k:'Fark',v:t?fD(a-t):'—'},{k:'Kullanım',v:p.use},{k:'Çevre',v:fL(per)},{k:'Köşe sayısı',v:String(p.ring.length)},{k:'Komşu parseller',v:nb.join(', ')||'—'}]}}
+    if(kind==='edge'){const e=this.edgeInfo(st,st.sel.id);if(!e)return base;const outer=e.ps.length<2,lk=st.locked.includes(e.k),drg=this.edgeDraggable(st,e.k);
+      const banner=outer?{icon:'icon-lock',title:'Sabit sınır',text:'Dış arazi sınırı taşınamaz. Uzunluk ve köşe bilgisi için kullanılabilir.',fg:INK,bg:'#eae9e9'}:lk?{icon:'icon-lock',title:'Kilitli sınır',text:'Kilidi açılana kadar bu sınır ve köşeleri taşınamaz.',fg:INK,bg:'#eae9e9'}:null;
+      const acts=outer?[sc('icon-circle-plus','Köşe ekle',()=>this.setState({addPrev:{key:e.k,t:0.5}})),sc('icon-ruler','Uzunluklar',()=>this.setState(s=>({showLengths:!s.showLengths})))]:lk?[sc('icon-lock-open','Kilidi aç',()=>this.toggleLock(e.k)),sc('icon-ellipsis','Diğer',()=>this.setState({menu:{kind:'edge'}}),0.7)]:[pr('icon-merge','Parselleri Birleştir',()=>this.askMerge(e.k),1.6),sc('icon-circle-plus','Köşe ekle',()=>this.setState({addPrev:{key:e.k,t:0.5}})),sc('icon-ellipsis','',()=>this.setState({menu:{kind:'edge'}}),0.35)];
+      return {...base,kicker:outer?'Dış sınır':'Ortak sınır',title:this.edgeName(st,e.k),value:fL(e.len),banner,sides:e.ps.map(side),note:drg?{icon:'icon-move-vertical',fg:INK2,text:'Sınırı tutup sürükleyin; kendi eksenine dik yönde taşınır.'}:null,actions:acts}}
+    if(kind==='vertex'){const id=st.sel.id,v=st.verts[id];if(!v)return base;const ps=st.parcels.filter(p=>p.ring.includes(id));const n=this.neighborsOfV(st,id).length;const lock=this.vLocked(st,id);const rem=n===2&&v.c!=='fixed';
+      const typ=v.c==='fixed'?'Arazi köşesi · sabit':Array.isArray(v.c)?'Dış sınır boyunca kayar':'Serbest';
+      return {...base,kicker:typ,title:this.vName(st,id),value:n+' sınır',valueSub:ps.length+' parsel',banner:v.c==='fixed'?{icon:'icon-lock',title:'Sabit köşe',text:'Arazi köşeleri taşınamaz.',fg:INK,bg:'#eae9e9'}:null,sides:ps.map(p=>side(p.id)),note:lock?null:{icon:'icon-move',fg:INK2,text:Array.isArray(v.c)?'Köşeyi sürükleyin; dış sınırdan ayrılmadan kayar.':'Köşeyi sürükleyin; bağlı sınırlar ve alanlar canlı güncellenir.'},
+        actions:[sc('icon-circle-minus','Köşeyi kaldır',()=>this.removeVertex(id),1,!rem),sc('icon-ellipsis','Diğer',()=>this.setState({menu:{kind:'vertex'}}),0.6)]}}
+    const list=st.parcels.slice().sort((a,b)=>a.num-b.num).map(p=>{const a=areas[p.id],t=tg[p.id],ds=this.diffStyle(t!=null?a-t:0,t);return {short:'P'+p.num,owner:p.owner||'Atanmamış',area:fA(a),diff:ds.text,dfg:ds.fg,dbg:ds.bg,onClick:()=>this.setState({sel:{type:'parcel',id:p.id},sheet:'half'})}});
+    const off=st.parcels.filter(p=>tg[p.id]!=null&&this.diffStyle(areas[p.id]-tg[p.id],tg[p.id]).text!=='Hedefte').length;
+    return {...base,kicker:'Arazi özeti',title:st.parcels.length+' parsel',value:fA(st.landArea),valueSub:fDn(st.landArea),note:{icon:off?'icon-triangle-alert':'icon-check',fg:off?WRN:POS,text:off?off+' parsel hedef alandan sapıyor':'Tüm parseller hedefte'},list}}
+}
+function dragging_(d){return !!(d&&d.kind==='edge')}
+</script>
+</body>
+</html>

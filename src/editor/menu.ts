@@ -76,16 +76,33 @@ export function buildMenu(st: EditorState, kind: MenuKind, act: EditorActions, l
   }
 
   if (kind === 'vertex' && sel) {
-    const n = neighborsOfV(st, sel.id).length, v = st.verts[sel.id], ok = n === 2 && v.c !== 'fixed';
+    const n = neighborsOfV(st, sel.id).length, v = st.verts[sel.id], minLand = v.c === 'fixed' && st.land.length <= 3, ok = n === 2 && !minLand;
     return {
       kicker: 'Köşe',
       title: vName(st, sel.id),
       items: [
-        M('icon-circle-minus', 'Köşeyi kaldır', () => ok && act.removeVertex(sel.id), { op: ok ? 1 : 0.45, sub: ok ? '' : 'Birden fazla sınırı bağlayan köşe kaldırılamaz' }),
+        M('icon-circle-minus', 'Köşeyi kaldır', () => ok && act.removeVertex(sel.id), { op: ok ? 1 : 0.45, sub: ok ? '' : minLand ? 'Arazinin en az 3 köşesi olmalı' : 'Birden fazla sınırı bağlayan köşe kaldırılamaz' }),
         M('icon-scan', 'Köşeye odaklan', () => act.focusVertex(sel.id)),
       ],
     };
   }
+
+  /** Background image: add, or move / crop / fade / hide / replace / remove it. */
+  const bgItems = (): MenuItem[] => {
+    const bg = st.bg;
+    if (!bg) return [M('icon-image-plus', 'Arkaplan resmi ekle', act.pickBg, { sub: 'Uydu görüntüsü, pafta, kroki' })];
+    const ops = [1, 0.7, 0.5, 0.3], next = ops[(ops.indexOf(bg.opacity) + 1) % ops.length];
+    return [
+      M('icon-move', 'Arkaplanı taşı / boyutlandır', () => act.editBg('move'), { checked: st.bgEdit === 'move' }),
+      M('icon-crop', 'Arkaplanı kırp', () => act.editBg('crop'), { checked: st.bgEdit === 'crop' }),
+      M('icon-rotate-cw', '90° döndür', () => act.updateBg({ rot: Math.atan2(Math.cos(bg.rot), -Math.sin(bg.rot)) }, 'Arkaplan döndürme'), { sub: bg.rot ? 'Şu an ' + Math.round((bg.rot * 180) / Math.PI) + '°' : '' }),
+      ...(bg.rot ? [M('icon-rotate-ccw', 'Döndürmeyi sıfırla', () => act.updateBg({ rot: 0 }, 'Arkaplan döndürme'))] : []),
+      M('icon-blend', 'Saydamlık · %' + Math.round(bg.opacity * 100), () => act.updateBg({ opacity: next }, 'Arkaplan saydamlığı'), { sub: 'Sonraki: %' + Math.round(next * 100) }),
+      M(bg.hidden ? 'icon-eye' : 'icon-eye-off', bg.hidden ? 'Arkaplanı göster' : 'Arkaplanı gizle', () => act.updateBg({ hidden: !bg.hidden }, 'Arkaplan görünürlüğü')),
+      M('icon-image', 'Resmi değiştir', act.pickBg),
+      M('icon-trash-2', 'Arkaplanı kaldır', act.removeBg),
+    ];
+  };
 
   if (kind === 'view') {
     return {
@@ -97,6 +114,7 @@ export function buildMenu(st: EditorState, kind: MenuKind, act: EditorActions, l
         M('icon-tag', 'Alan etiketleri', act.toggleAreas, { checked: st.showAreas }),
         M('icon-ruler', 'Sınır uzunlukları', act.toggleLengths, { checked: st.showLengths }),
         M('icon-scan', 'Araziye sığdır', act.doFit),
+        ...bgItems(),
       ],
     };
   }
@@ -108,7 +126,9 @@ export function buildMenu(st: EditorState, kind: MenuKind, act: EditorActions, l
       M('icon-scan', 'Araziye sığdır', act.doFit),
       M('icon-tag', 'Alan etiketleri', act.toggleAreas, { checked: st.showAreas }),
       M('icon-ruler', 'Sınır uzunlukları', act.toggleLengths, { checked: st.showLengths }),
-      M('icon-file-down', 'Dışa aktar', null, { sub: 'PDF paftası, DXF, KML' }),
+      ...bgItems(),
+      M('icon-file-down', 'Dışa aktar', act.exportPdf, { sub: 'PDF pafta · arazi verisini içerir' }),
+      M('icon-file-up', 'İçe aktar', act.importFile, { sub: 'Dışa aktarılmış PDF · yeni arazi olarak açılır' }),
       M('icon-file-plus', 'Yeni arazi', act.newLand, { sub: 'Boş durumu göster' }),
     ],
   };

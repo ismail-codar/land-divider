@@ -52,7 +52,22 @@ export interface SplitPoint extends Pt { vid?: string; edge?: string }
 export interface SplitState { pid: string | null; p1: SplitPoint | null; p2: SplitPoint | null; cur: number }
 
 export interface AddPreview { key: string; t: number }
-export interface HistoryEntry { verts: Verts; parcels: Parcel[]; land: string[]; label: string }
+export interface HistoryEntry { verts: Verts; parcels: Parcel[]; land: string[]; bg: BgImage | null; label: string }
+
+/** Background image in world units: full image at (x, y) with width w, rotated by rot (rad) about its center; crop = visible fractions of it. */
+export interface BgImage {
+  src: string;
+  iw: number;
+  ih: number;
+  x: number;
+  y: number;
+  w: number;
+  rot: number;
+  crop: { l: number; t: number; r: number; b: number };
+  opacity: number;
+  hidden: boolean;
+}
+export type BgEditMode = 'move' | 'crop';
 export interface Snack { msg: string; action?: string; fn?: 'undo' | 'redo' }
 export interface MenuState { kind: MenuKind; x?: number; y?: number }
 export interface ConfirmState { a: string; b: string; key: string }
@@ -67,6 +82,7 @@ export interface LandModel {
   cy: number;
   nextNum: number;
   nextV: number;
+  bg?: BgImage | null;
 }
 
 export interface EditorState extends LandModel {
@@ -93,6 +109,7 @@ export interface EditorState extends LandModel {
   showAreas: boolean;
   showLengths: boolean;
   hover: Hover | null;
+  bgEdit: BgEditMode | null;
   W: number;
   H: number;
 }
@@ -117,6 +134,12 @@ export interface EditorActions {
   confirmAddVertex(): void;
   removeVertex(id: string): void;
   makeCorner(id: string): void;
+  pickBg(): void;
+  importFile(): void;
+  exportPdf(): void;
+  editBg(mode: BgEditMode): void;
+  updateBg(patch: Partial<BgImage>, label: string): void;
+  removeBg(): void;
   focusVertex(id: string): void;
   askMerge(edgeKey: string): void;
   toggleLock(edgeKey: string): void;

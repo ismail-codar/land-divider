@@ -1,4 +1,5 @@
-import { BG, INK2, LINE } from '../constants';
+import { useState } from 'react';
+import { ACC, BG, INK, INK2, LINE } from '../constants';
 import Icon from './Icon';
 import type { SegItem, ToolItem } from './types';
 import ViewModeSwitch from './ViewModeSwitch';
@@ -18,17 +19,54 @@ interface Props {
   onRedo: () => void;
   onMenu: () => void;
   onBack?: () => void;
+  /** Makes the title editable in place; called with the trimmed, changed name. */
+  onRename?: (name: string) => void;
 }
 
 const iconBtn = { width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' } as const;
 const ellipsis = { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } as const;
 
-export default function TopBar({ top, title, height, subtitle, desktop, tools, seg, undoColor, redoColor, onUndo, onRedo, onMenu, onBack }: Props) {
+/** Title that turns into a text field on click; Enter / blur saves, Escape cancels. */
+function Title({ title, onRename }: { title: string; onRename?: (name: string) => void }) {
+  const [draft, setDraft] = useState<string | null>(null);
+  const text = { fontSize: 16, fontWeight: 800, lineHeight: '22px', color: INK } as const;
+  if (!onRename) return <div style={{ ...text, ...ellipsis }}>{title}</div>;
+  if (draft === null)
+    return (
+      <div onClick={() => setDraft(title)} title="Arazi adını değiştir" className="hv-ink07" style={{ ...text, display: 'flex', alignItems: 'center', gap: 6, minWidth: 0, margin: '0 -4px', padding: '0 4px', cursor: 'text' }}>
+        <span style={ellipsis}>{title}</span>
+        <Icon name="icon-pencil" size={13} style={{ color: INK2, flexShrink: 0 }} />
+      </div>
+    );
+  const done = (save: boolean) => {
+    const n = draft.trim();
+    setDraft(null);
+    if (save && n && n !== title) onRename(n);
+  };
+  return (
+    <input
+      autoFocus
+      value={draft}
+      maxLength={80}
+      aria-label="Arazi adı"
+      onFocus={(e) => e.currentTarget.select()}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={() => done(true)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') done(true);
+        else if (e.key === 'Escape') done(false);
+      }}
+      style={{ ...text, fontFamily: 'inherit', width: 'min(320px, 50vw)', margin: '0 -4px', padding: '0 4px', border: 'none', outline: '2px solid ' + ACC, background: '#fff', borderRadius: 0 }}
+    />
+  );
+}
+
+export default function TopBar({ top, title, height, subtitle, desktop, tools, seg, undoColor, redoColor, onUndo, onRedo, onMenu, onBack, onRename }: Props) {
   return (
     <div style={{ position: 'absolute', left: 0, right: 0, top, height, display: 'flex', alignItems: 'center', gap: 4, padding: '0 4px', background: BG, borderBottom: '2px solid ' + LINE }}>
       <div onClick={onBack} title="Geri" className="hv-ink07" style={iconBtn}><Icon name="icon-arrow-left" size={22} /></div>
       <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, paddingRight: 8 }}>
-        <div style={{ fontSize: 16, fontWeight: 800, ...ellipsis }}>{title}</div>
+        <Title title={title} onRename={onRename} />
         <div style={{ fontSize: 12, color: INK2, ...ellipsis }}>{subtitle}</div>
       </div>
       {desktop && (

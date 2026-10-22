@@ -27,9 +27,9 @@ export default function NewLandPage() {
         nav={nav}
         onNavChange={onNavChange}
         onBack={() => navigate({ to: '/lands' })}
-        onLandCreated={(model, flash) => {
-          const drawn = model.parcels.length === 1;
-          const rec = createLand(drawn ? 'Yeni arazi' : 'İçe aktarılan arazi', model);
+        onLandCreated={(model, flash, name) => {
+          const drawn = !name && model.parcels.length === 1;
+          const rec = createLand(name || (drawn ? 'Yeni arazi' : 'İçe aktarılan arazi'), model);
           if (drawn) navigate({ to: '/lands/$landId/parcels/$parcelId', params: { landId: rec.id, parcelId: 'p1' }, replace: true, state: { flash } });
           else navigate({ to: '/lands/$landId', params: { landId: rec.id }, replace: true, state: { flash } });
         }}

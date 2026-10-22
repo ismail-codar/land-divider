@@ -30,6 +30,11 @@ export function createLand(name: string, model: LandModel): LandRecord {
   return rec;
 }
 
+export function renameLand(id: string, name: string) {
+  const rec = lands.get(id);
+  if (rec) lands.set(id, { ...rec, name });
+}
+
 export function saveLand(id: string, model: LandModel) {
   const rec = lands.get(id);
   if (rec) lands.set(id, { ...rec, model });

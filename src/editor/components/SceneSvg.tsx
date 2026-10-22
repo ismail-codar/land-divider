@@ -11,9 +11,9 @@ export default function SceneSvg({ sc }: { sc: Scene }) {
         </pattern>
       </defs>
       {sc.faces.map((f, i) => (
-        <polygon key={i} points={f.pts} fill={f.fill} stroke={f.stroke} style={{ strokeWidth: f.sw + 'px', strokeLinejoin: 'round' }} />
+        <polygon key={i} points={f.pts} fill={f.fill} fillOpacity={f.op ?? 1} stroke={f.stroke} style={{ strokeWidth: f.sw + 'px', strokeLinejoin: 'round' }} />
       ))}
-      {sc.polys.map((p, i) => <polygon key={i} points={p.pts} fill={p.fill} />)}
+      {sc.polys.map((p, i) => <polygon key={i} points={p.pts} fill={p.fill} fillOpacity={p.op ?? 1} />)}
       {sc.lines.map((l, i) => (
         <line key={i} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} stroke={l.c}
           style={{ strokeWidth: l.w + 'px', strokeDasharray: l.dash, strokeLinecap: l.cap as 'round' | 'butt' }} />

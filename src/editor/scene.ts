@@ -7,8 +7,8 @@ import {
 } from './model';
 import type { EdgeMap, EditorState, Parcel, Projector, Pt } from './types';
 
-export interface SceneFace { pts: string; fill: string; stroke: string; sw: number }
-export interface ScenePoly { pts: string; fill: string }
+export interface SceneFace { pts: string; fill: string; stroke: string; sw: number; op?: number }
+export interface ScenePoly { pts: string; fill: string; op?: number }
 export interface SceneLine { x1: number; y1: number; x2: number; y2: number; c: string; w: number; dash: string; cap: string }
 export interface SceneDot { x: number; y: number; s: number; rx: number; fill: string; stroke: string; sw: number; dash: string }
 export interface SceneLabel {
@@ -85,10 +85,10 @@ export function buildScene(st: EditorState, P: Projector, E: EdgeMap, areas: Rec
     });
   };
 
-  // 3D: land base, extruded walls and roofs painted back-to-front.
+  // 3D: land base, extruded walls and roofs painted back-to-front; parcel solids are half see-through.
   if (t > 0) {
-    const Ld = st.land.map((id) => P(V[id].x, V[id].y, 0));
-    o.faces.push({ pts: pstr(Ld), fill: '#d2cece', stroke: 'none', sw: 0 });
+    const Ld = st.land.map((id) => P(V[id].x, V[id].y, 0)), SOLID = 0.5;
+    o.faces.push({ pts: pstr(Ld), fill: '#d2cece', stroke: 'none', sw: 0, op: st.bg && !st.bg.hidden ? 0.35 : 1 });
     const yw = st.yaw * t, cs = Math.cos(yw), sn = Math.sin(yw);
     order3d(st, P).forEach((p) => {
       const isSel = sel && sel.type === 'parcel' && sel.id === p.id;
@@ -108,22 +108,23 @@ export function buildScene(st: EditorState, P: Projector, E: EdgeMap, areas: Rec
         walls.push({
           d: (P(a.x, a.y).d + P(b.x, b.y).d) / 2,
           pts: pstr([P(a.x, a.y, 0), P(b.x, b.y, 0), P(b.x, b.y, p.h), P(a.x, a.y, p.h)]),
-          fill: 'rgb(' + cc.join(',') + ')', stroke: isSel ? ACC : LOCKED, sw: isSel ? 1.5 : 0.75,
+          fill: 'rgb(' + cc.join(',') + ')', stroke: isSel ? ACC : LOCKED, sw: isSel ? 1.5 : 0.75, op: SOLID,
         });
       }
       walls.sort((x, y) => x.d - y.d).forEach((w) => o.faces.push(w));
       const top = r.map((id) => P(V[id].x, V[id].y, p.h));
-      o.faces.push({ pts: pstr(top), fill: isSel ? ACC1 : FILLS[p.num % 3], stroke: isSel ? ACC : INK2, sw: isSel ? 2.5 : 1 });
+      o.faces.push({ pts: pstr(top), fill: isSel ? ACC1 : FILLS[p.num % 3], stroke: isSel ? ACC : INK2, sw: isSel ? 2.5 : 1, op: SOLID });
       const c = cen(pts(V, r));
       lab(p, P(c.x, c.y, p.h));
     });
     return o;
   }
 
-  // 2D: parcel fills.
+  // 2D: parcel fills (see-through over a background image).
+  const op = st.bg && !st.bg.hidden ? 0.35 : 1;
   st.parcels.forEach((p) => {
     const isSel = (sel && sel.type === 'parcel' && sel.id === p.id) || (st.split && st.split.pid === p.id);
-    o.polys.push({ pts: pstr(p.ring.map((id) => P(V[id].x, V[id].y))), fill: isSel ? ACC1 : FILLS[p.num % 3] });
+    o.polys.push({ pts: pstr(p.ring.map((id) => P(V[id].x, V[id].y))), fill: isSel ? ACC1 : FILLS[p.num % 3], op: isSel ? Math.max(op, 0.6) : op });
   });
 
   // Edges (vertices touched by the active drag are highlighted).

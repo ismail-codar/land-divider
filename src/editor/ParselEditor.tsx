@@ -1,7 +1,7 @@
 // Map-centric parcel editor. This class owns editor state and pointer/gesture handling;
 // geometry lives in ./geometry + ./model, view-models in ./scene, ./panel, ./menu,
 // and rendering is delegated to ./components.
-import { Component, createRef, type MouseEvent, type PointerEvent } from 'react';
+import { Component, createRef, type ChangeEvent, type MouseEvent, type PointerEvent } from 'react';
 import { ACC, ACC1, ACC7, BAD, BG, DISABLED, INK, ZOOM_MAX, ZOOM_MIN } from './constants';
 import { fA, fDn, fL } from './format';
 import { K, areasOf, cen, clamp, ease, hyp, insertOnEdge, mergeRings, pip, pts, sArea, segD, validate } from './geometry';
@@ -16,8 +16,10 @@ import { buildPanel } from './panel';
 import { sample } from './sample';
 import { buildScene } from './scene';
 import type {
-  Device, EditorActions, EditorState, Hover, LandModel, MenuKind, Pt, Scenario, Selection, SheetLevel, Tool, ToolId, Verts, View,
+  BgEditMode, BgImage, Device, EditorActions, EditorState, Hover, LandModel, MenuKind, Pt, Scenario, Selection, SheetLevel, Tool, ToolId, Verts, View,
 } from './types';
+import { BgHandles, BgLayer, bgHit } from './components/BgImage';
+import { download, fileBase, readImport, toPdf } from './io';
 import DetailPanel, { type PanelFrame } from './components/DetailPanel';
 import EmptyState from './components/EmptyState';
 import InstructionBar, { type Instruction } from './components/InstructionBar';
@@ -37,6 +39,8 @@ export interface ParselEditorProps {
   /** Draw the fake device status bar (design frames). Default true. */
   statusBar?: boolean;
   landName?: string;
+  /** Enables in-place renaming of the land from the top bar. */
+  onRename?: (name: string) => void;
   /** Initial land geometry; defaults to the sample land. */
   land?: LandModel;
   /** Snackbar message shown once after mount. */
@@ -48,8 +52,8 @@ export interface ParselEditorProps {
   onNavChange?: (nav: EditorNav, opts: { replace: boolean }) => void;
   onBack?: () => void;
   onNewLand?: () => void;
-  /** Called instead of replacing the land in place when a land is drawn or imported. */
-  onLandCreated?: (land: LandModel, flash: string) => void;
+  /** Called instead of replacing the land in place when a land is drawn or imported (`name` comes from an imported file). */
+  onLandCreated?: (land: LandModel, flash: string, name?: string) => void;
   /** Called whenever the land geometry changes (edit, undo, redo). */
   onLandChange?: (land: LandModel) => void;
 }
@@ -93,6 +97,8 @@ const landAreaOf = (st: Pick<EditorState, 'verts' | 'land'>) => Math.abs(sArea(p
 export default class ParselEditor extends Component<ParselEditorProps, EditorState> {
   rootRef = createRef<HTMLDivElement>();
   cvRef = createRef<HTMLDivElement>();
+  fileRef = createRef<HTMLInputElement>();
+  importRef = createRef<HTMLInputElement>();
   ptrs = new Map<number, Pt>();
   g: Gesture | null = null;
   sd: SheetDrag | null = null;
@@ -116,7 +122,7 @@ export default class ParselEditor extends Component<ParselEditorProps, EditorSta
     sel: null, tool: 'select', split: null, addPrev: null, drawPts: [], empty: false,
     view: { x: 0, y: 0, k: 2 }, t3d: 0, yaw: -0.55, tiltAmt: 0.45,
     sheet: 'collapsed', sheetDrag: null, drag: null, undo: [], redo: [], snack: null, hint: null,
-    menu: null, confirm: null, locked: [], showAreas: true, showLengths: false, hover: null, W: 0, H: 0,
+    menu: null, confirm: null, locked: [], showAreas: true, showLengths: false, hover: null, bgEdit: null, W: 0, H: 0,
   };
 
   get device(): Device {
@@ -143,7 +149,7 @@ export default class ParselEditor extends Component<ParselEditorProps, EditorSta
   componentDidUpdate(_: ParselEditorProps, prev: EditorState) {
     const s = this.state;
     if (s.verts !== prev.verts && s.land.length && landAreaOf(s) !== s.landArea) this.setState({ landArea: landAreaOf(s) });
-    if (this.navReady && (s.verts !== prev.verts || s.parcels !== prev.parcels || s.land !== prev.land)) this.props.onLandChange?.(this.landOf());
+    if (this.navReady && (s.verts !== prev.verts || s.parcels !== prev.parcels || s.land !== prev.land || s.bg !== prev.bg)) this.props.onLandChange?.(this.landOf());
     const nav = this.props.nav;
     if (!nav || !this.navReady || this.applying) return;
     const urlKey = navKey(nav);
@@ -191,7 +197,7 @@ export default class ParselEditor extends Component<ParselEditorProps, EditorSta
 
   landOf(st: EditorState = this.state): LandModel {
     const { verts, parcels, land, orient, cx, cy, nextNum, nextV } = st;
-    return { verts, parcels, land, orient, landArea: landAreaOf(st), cx, cy, nextNum, nextV };
+    return { verts, parcels, land, orient, landArea: landAreaOf(st), cx, cy, nextNum, nextV, bg: st.bg ?? null };
   }
 
   selValid(sel: Selection, st: EditorState) {
@@ -334,7 +340,7 @@ export default class ParselEditor extends Component<ParselEditorProps, EditorSta
       case '3d': p = { sel: { type: 'parcel', id: 'p12' }, sheet: 'half', t3d: 1 }; break;
       case 'undo': {
         const moved = mv('M11', 56, 43);
-        p = { redo: [{ verts: moved, parcels: s.parcels, land: s.land, label: 'Köşe hareketi' }], snack: { msg: 'Köşe hareketi geri alındı', action: 'İleri Al', fn: 'redo' } };
+        p = { redo: [{ verts: moved, parcels: s.parcels, land: s.land, bg: s.bg ?? null, label: 'Köşe hareketi' }], snack: { msg: 'Köşe hareketi geri alındı', action: 'İleri Al', fn: 'redo' } };
         break;
       }
       case 'addv': p = { sel: { type: 'edge', id: K('M11', 'M12') }, addPrev: { key: K('M11', 'M12'), t: 0.4 } }; break;
@@ -354,7 +360,7 @@ export default class ParselEditor extends Component<ParselEditorProps, EditorSta
 
   // ---------- history / feedback ----------
   commit(patch: Partial<EditorState>, label: string) {
-    this.setState((s) => ({ undo: [...s.undo.slice(-40), { verts: s.verts, parcels: s.parcels, land: s.land, label }], redo: [], ...patch }) as EditorState);
+    this.setState((s) => ({ undo: [...s.undo.slice(-40), { verts: s.verts, parcels: s.parcels, land: s.land, bg: s.bg ?? null, label }], redo: [], ...patch }) as EditorState);
   }
 
   showSnack(msg: string, action?: string, fn?: 'undo' | 'redo') {
@@ -374,8 +380,8 @@ export default class ParselEditor extends Component<ParselEditorProps, EditorSta
     if (!s.undo.length) return;
     const e = s.undo[s.undo.length - 1];
     this.setState({
-      undo: s.undo.slice(0, -1), redo: [...s.redo, { verts: s.verts, parcels: s.parcels, land: s.land, label: e.label }],
-      verts: e.verts, parcels: e.parcels, land: e.land, drag: null, split: null, addPrev: null, tool: 'select', sel: keepSel(s.sel, e.parcels),
+      undo: s.undo.slice(0, -1), redo: [...s.redo, { verts: s.verts, parcels: s.parcels, land: s.land, bg: s.bg ?? null, label: e.label }],
+      verts: e.verts, parcels: e.parcels, land: e.land, bg: e.bg, drag: null, split: null, addPrev: null, tool: 'select', sel: keepSel(s.sel, e.parcels),
     });
     this.showSnack(e.label + ' geri alındı', 'İleri Al', 'redo');
   };
@@ -385,8 +391,8 @@ export default class ParselEditor extends Component<ParselEditorProps, EditorSta
     if (!s.redo.length) return;
     const e = s.redo[s.redo.length - 1];
     this.setState({
-      redo: s.redo.slice(0, -1), undo: [...s.undo, { verts: s.verts, parcels: s.parcels, land: s.land, label: e.label }],
-      verts: e.verts, parcels: e.parcels, land: e.land, drag: null, sel: keepSel(s.sel, e.parcels),
+      redo: s.redo.slice(0, -1), undo: [...s.undo, { verts: s.verts, parcels: s.parcels, land: s.land, bg: s.bg ?? null, label: e.label }],
+      verts: e.verts, parcels: e.parcels, land: e.land, bg: e.bg, drag: null, sel: keepSel(s.sel, e.parcels),
     });
     this.showSnack(e.label + ' yeniden uygulandı', 'Geri Al', 'undo');
   };
@@ -716,6 +722,11 @@ export default class ParselEditor extends Component<ParselEditorProps, EditorSta
       if (p) this.setState({ sel: { type: 'parcel', id: p.id }, split: { pid: p.id, p1: null, p2: null, cur: 1 } });
       return;
     }
+    // Tapping the background image where no land geometry is hit reopens its edit mode.
+    if (!h && s.tool === 'select' && s.t3d === 0 && s.bg && !s.bg.hidden && bgHit(s.bg, this.toWorld(g.x0!, g.y0!))) {
+      this.act.editBg('move');
+      return;
+    }
     this.selectHit(h);
   }
 
@@ -774,7 +785,7 @@ export default class ParselEditor extends Component<ParselEditorProps, EditorSta
     const s = this.state, d = s.drag;
     if (!d) return;
     const moved = s.verts !== d.v0;
-    if (moved) this.setState({ undo: [...s.undo.slice(-40), { verts: d.v0, parcels: s.parcels, land: s.land, label: d.kind === 'vertex' ? 'Köşe hareketi' : 'Sınır hareketi' }], redo: [] });
+    if (moved) this.setState({ undo: [...s.undo.slice(-40), { verts: d.v0, parcels: s.parcels, land: s.land, bg: s.bg ?? null, label: d.kind === 'vertex' ? 'Köşe hareketi' : 'Sınır hareketi' }], redo: [] });
     this.setState({ drag: null });
     if (d.ghost) this.showHint('Son geçerli konuma döndü');
   }
@@ -845,7 +856,7 @@ export default class ParselEditor extends Component<ParselEditorProps, EditorSta
     const la = sArea(pts(V, ids)), c = cen(pts(V, ids));
     if (this.props.onLandCreated) {
       const parcels = [{ id: 'p1', num: 1, name: 'Parsel 1', ring: ids, owner: '', share: 100, use: '—', h: 4 }];
-      this.props.onLandCreated({ verts: V, land: ids, orient: 1, landArea: Math.abs(la), cx: c.x, cy: c.y, parcels, nextNum: 2, nextV: s.nextV }, 'Arazi oluşturuldu · Böl ile parselleyin');
+      this.props.onLandCreated({ verts: V, land: ids, orient: 1, landArea: Math.abs(la), cx: c.x, cy: c.y, parcels, nextNum: 2, nextV: s.nextV, bg: s.bg ?? null }, 'Arazi oluşturuldu · Böl ile parselleyin');
       return;
     }
     this.setState({
@@ -856,7 +867,85 @@ export default class ParselEditor extends Component<ParselEditorProps, EditorSta
     this.showSnack('Arazi oluşturuldu · Böl ile parselleyin');
   };
 
-  startDraw = () => this.setState({ tool: 'draw', drawPts: [] });
+  startDraw = () => this.setState({ tool: 'draw', drawPts: [], bgEdit: null });
+
+  // ---------- background image ----------
+  /** Loads the picked image and places it over the land (or the visible canvas when empty), then opens move mode. */
+  onBgFile = (e: ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    e.target.value = '';
+    if (!f) return;
+    const rd = new FileReader();
+    rd.onload = () => {
+      const src = rd.result as string, im = new Image();
+      im.onload = () => {
+        const s = this.state, L = this.lay(s);
+        let c: Pt, w: number;
+        if (!s.empty && s.land.length) {
+          const ps = pts(s.verts, s.land), xs = ps.map((p) => p.x), ys = ps.map((p) => p.y);
+          c = { x: (Math.min(...xs) + Math.max(...xs)) / 2, y: (Math.min(...ys) + Math.max(...ys)) / 2 };
+          w = (Math.max(...xs) - Math.min(...xs)) * 1.4;
+        } else {
+          c = this.toWorld(L.cv.w / 2, L.cv.h / 2);
+          w = (L.cv.w * 0.8) / s.view.k;
+        }
+        const h = w * (im.naturalHeight / im.naturalWidth);
+        const bg: BgImage = {
+          src, iw: im.naturalWidth, ih: im.naturalHeight, x: c.x - w / 2, y: c.y - h / 2, w, rot: 0,
+          crop: { l: 0, t: 0, r: 1, b: 1 }, opacity: s.empty ? 1 : 0.7, hidden: false,
+        };
+        this.commit({ bg, bgEdit: 'move', tool: s.tool === 'draw' ? 'draw' : 'select', split: null, addPrev: null, sel: null }, 'Arkaplan resmi');
+        this.showSnack('Arkaplan eklendi · taşıyıp boyutlandırın', 'Geri Al', 'undo');
+      };
+      im.onerror = () => this.showHint('Resim okunamadı');
+      im.src = src;
+    };
+    rd.readAsDataURL(f);
+  };
+
+  /** Records one undo step for a finished handle gesture. */
+  bgGestureEnd = (before: BgImage) => {
+    const s = this.state;
+    if (s.bg === before) return;
+    this.setState({ undo: [...s.undo.slice(-40), { verts: s.verts, parcels: s.parcels, land: s.land, bg: before, label: 'Arkaplan düzenleme' }], redo: [] });
+  };
+
+  // ---------- import / export ----------
+  exportPdf = async () => {
+    const s = this.state;
+    if (s.empty || !s.land.length) {
+      this.showHint('Dışa aktarılacak arazi yok');
+      return;
+    }
+    const name = this.props.landName || 'Arazi';
+    try {
+      download(await toPdf(name, this.landOf()), fileBase(name) + '.pdf');
+      this.showSnack('PDF indirildi');
+    } catch {
+      this.showHint('Dışa aktarma başarısız oldu');
+    }
+  };
+
+  /** Reads a picked PDF; the imported land becomes a new land (host) or replaces the current one. */
+  onImportFile = async (e: ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    e.target.value = '';
+    if (!f) return;
+    let r: Awaited<ReturnType<typeof readImport>>;
+    try {
+      r = await readImport(f);
+    } catch (err) {
+      this.showHint(err instanceof Error ? err.message : 'Dosya okunamadı');
+      return;
+    }
+    const msg = r.land.parcels.length + ' parsel içe aktarıldı';
+    if (this.props.onLandCreated) {
+      this.props.onLandCreated(r.land, msg, r.name);
+      return;
+    }
+    this.setState({ ...r.land, empty: false, tool: 'select', sel: null, split: null, addPrev: null, drawPts: [], bgEdit: null, menu: null, locked: [], undo: [], redo: [] }, () => this.doFit());
+    this.showSnack(msg);
+  };
 
   importSample = () => {
     if (this.props.onLandCreated) {
@@ -886,6 +975,7 @@ export default class ParselEditor extends Component<ParselEditorProps, EditorSta
       this.showHint('Düzenleme için 2D görünüme geçin');
       return;
     }
+    if (s.bgEdit) this.setState({ bgEdit: null });
     if (id === 'select') this.setState({ tool: 'select', split: null, addPrev: null });
     if (id === 'addv') this.setState({ tool: 'addv', split: null, addPrev: null, sel: s.sel && s.sel.type === 'edge' ? s.sel : null });
     if (id === 'split') {
@@ -895,6 +985,10 @@ export default class ParselEditor extends Component<ParselEditorProps, EditorSta
   }
 
   exitTool = () => {
+    if (this.state.bgEdit) {
+      this.setState({ bgEdit: null });
+      return;
+    }
     if (this.state.tool === 'draw') {
       this.setState({ tool: 'select', drawPts: [] });
       return;
@@ -906,6 +1000,7 @@ export default class ParselEditor extends Component<ParselEditorProps, EditorSta
     const s = this.state;
     this.want3d = on;
     if (on && s.tool !== 'select') this.setState({ tool: 'select', split: null, addPrev: null });
+    if (on && s.bgEdit) this.setState({ bgEdit: null });
     if (on && s.sel && s.sel.type !== 'parcel') this.setState({ sel: null });
     const T = on ? 1 : 0;
     this.animView(this.fit({ ...this.state }, T), T, 520);
@@ -943,6 +1038,21 @@ export default class ParselEditor extends Component<ParselEditorProps, EditorSta
     confirmAddVertex: () => this.confirmAddV(),
     removeVertex: (id) => this.removeVertex(id),
     makeCorner: (id) => this.makeCorner(id),
+    pickBg: () => this.fileRef.current?.click(),
+    importFile: () => this.importRef.current?.click(),
+    exportPdf: () => void this.exportPdf(),
+    editBg: (mode: BgEditMode) => {
+      if (this.state.t3d > 0) this.set3d(false);
+      this.setState((s) => ({ bgEdit: mode, bg: s.bg && { ...s.bg, hidden: false }, split: null, addPrev: null, sel: null, tool: s.tool === 'draw' ? 'draw' : 'select' }));
+    },
+    updateBg: (patch, label) => {
+      const bg = this.state.bg;
+      if (bg) this.commit({ bg: { ...bg, ...patch } }, label);
+    },
+    removeBg: () => {
+      this.commit({ bg: null, bgEdit: null }, 'Arkaplan kaldırma');
+      this.showSnack('Arkaplan kaldırıldı', 'Geri Al', 'undo');
+    },
     focusVertex: (id) => {
       const st = this.state, L = this.lay(st), v = st.verts[id], q = proj(st)(v.x, v.y);
       this.setState((s) => ({ view: { ...s.view, x: s.view.x + L.cv.w / 2 - q.x, y: s.view.y + L.cv.h / 3 - q.y } }));
@@ -1019,6 +1129,8 @@ export default class ParselEditor extends Component<ParselEditorProps, EditorSta
     const kind = panelKind(st);
     const cv = L.cv;
     const tool = st.tool;
+    // Background image follows the projection; its edit handles are 2D only (they assume the flat projection).
+    const bgOn = !!st.bg && !st.bg.hidden;
 
     // 10 m grid (50 m when zoomed out), fades out in 3D.
     const grid = (() => {
@@ -1062,6 +1174,8 @@ export default class ParselEditor extends Component<ParselEditorProps, EditorSta
       ({ text, icon, step: step || '', closable: !!closable, bg: neg ? '#fbe5e0' : INK, fg: neg ? BAD : BG });
     let instr: Instruction | null = null;
     if (st.hint) instr = I(st.hint.text, 'icon-info');
+    else if (st.bgEdit === 'move') instr = I('Resmi sürükleyin · köşelerden boyutlandırın · üstteki tutamaçla döndürün', 'icon-move', 'Arkaplan', true);
+    else if (st.bgEdit === 'crop') instr = I('Kenar ve köşeleri sürükleyerek kırpın', 'icon-crop', 'Arkaplan', true);
     else if (tool === 'draw') instr = I(st.drawPts.length >= 3 ? 'Kapatmak için ilk noktaya dokunun' : 'Her köşe için dokunun', 'icon-pen-tool', st.drawPts.length + ' nokta', true);
     else if (tool === 'addv' && !st.addPrev) instr = I('Köşe eklemek için bir sınıra dokunun', 'icon-circle-plus', '', true);
     else if (tool === 'split') {
@@ -1166,16 +1280,24 @@ export default class ParselEditor extends Component<ParselEditorProps, EditorSta
           style={{ position: 'absolute', left: cv.l, top: cv.t, width: cv.w, height: cv.h, overflow: 'hidden', touchAction: 'none', background: '#e3e0e0', cursor }}
         >
           <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', opacity: grid.o, backgroundImage: 'linear-gradient(#d6d2d2 1px,transparent 1px),linear-gradient(90deg,#d6d2d2 1px,transparent 1px)', backgroundSize: `${grid.s}px ${grid.s}px`, backgroundPosition: `${grid.x}px ${grid.y}px` }} />
+          {bgOn && <BgLayer bg={st.bg!} P={P} cropping={st.bgEdit === 'crop'} />}
           <SceneSvg sc={sc} />
+          {bgOn && st.bgEdit && st.t3d === 0 && (
+            <BgHandles bg={st.bg!} view={st.view} mode={st.bgEdit} onChange={(bg) => this.setState({ bg })} onEnd={this.bgGestureEnd} />
+          )}
           <MapOverlays sc={sc} ro={ro} />
-          {st.empty && tool !== 'draw' && <EmptyState onDraw={this.startDraw} onImport={this.importSample} />}
+          {st.empty && tool !== 'draw' && <EmptyState onDraw={this.startDraw} onImport={this.act.importFile} onSample={this.importSample} />}
         </div>
+
+        <input ref={this.fileRef} type="file" accept="image/*" onChange={this.onBgFile} style={{ display: 'none' }} />
+        <input ref={this.importRef} type="file" accept=".pdf,application/pdf" onChange={this.onImportFile} style={{ display: 'none' }} />
 
         {L.statusH > 0 && <StatusBar height={L.statusH} />}
 
         <TopBar
           top={L.statusH}
           title={this.props.landName || 'Karaağaç Arazisi'}
+          onRename={this.props.onRename}
           onBack={this.props.onBack}
           height={L.tH}
           subtitle={st.empty ? 'Sınır tanımlı değil' : 'Ada 214 · ' + st.parcels.length + ' parsel · ' + fDn(st.landArea)}

@@ -1,8 +1,8 @@
-import { getRouteApi, Outlet, useNavigate, useParams, useRouterState } from '@tanstack/react-router';
+import { getRouteApi, Outlet, useNavigate, useParams, useRouter, useRouterState } from '@tanstack/react-router';
 import { useMemo } from 'react';
 import ParselEditor from '../editor/ParselEditor';
 import type { EditorNav } from '../editor/nav';
-import { saveLand } from '../mock/lands';
+import { createLand, renameLand, saveLand } from '../mock/lands';
 import { navFromUrl, navToUrl } from './navSearch';
 import { useDevice } from './useDevice';
 import { useNavSync } from './useNavSync';
@@ -20,6 +20,7 @@ export default function LandEditorPage() {
   const { parcelId } = useParams({ strict: false });
   const flash = useRouterState({ select: (s) => s.location.state.flash });
   const navigate = useNavigate();
+  const router = useRouter();
   const device = useDevice();
   const nav = useMemo(() => navFromUrl(parcelId, search), [parcelId, search]);
 
@@ -37,6 +38,10 @@ export default function LandEditorPage() {
         device={device}
         statusBar={false}
         landName={land.name}
+        onRename={(name) => {
+          renameLand(landId, name);
+          void router.invalidate();
+        }}
         land={land.model}
         flash={flash}
         nav={nav}
@@ -44,6 +49,11 @@ export default function LandEditorPage() {
         onBack={() => navigate({ to: '/lands' })}
         onNewLand={() => navigate({ to: '/lands/new' })}
         onLandChange={(model) => saveLand(landId, model)}
+        onLandCreated={(model, flash, name) => {
+          // Imports open as a new land; the current one is kept as is.
+          const rec = createLand(name || 'İçe aktarılan arazi', model);
+          navigate({ to: '/lands/$landId', params: { landId: rec.id }, state: { flash } });
+        }}
       />
       <Outlet />
     </div>

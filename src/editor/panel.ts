@@ -212,7 +212,7 @@ export function buildPanel(
     const ps = st.parcels.filter((p) => p.ring.includes(id));
     const n = neighborsOfV(st, id).length;
     const lock = vLocked(st, id);
-    const removable = n === 2 && v.c !== 'fixed';
+    const removable = n === 2 && (v.c !== 'fixed' || st.land.length > 3);
     const typ = v.c === 'fixed' ? 'Arazi köşesi' : Array.isArray(v.c) ? 'Dış sınır boyunca kayar' : 'Serbest';
     return {
       ...base,

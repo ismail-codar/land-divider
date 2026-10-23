@@ -84,7 +84,7 @@ interface Gesture {
 interface SheetDrag { y0: number; h0: number; t0: number; moved: boolean }
 
 const TOOLS: [ToolId, string, string][] = [
-  ['select', 'icon-mouse-pointer-2', 'Seç'],
+  ['select', 'icon-mouse-pointer-2', 'Seç/Düzenle'],
   ['addv', 'icon-circle-plus', 'Köşe'],
   ['split', 'icon-scissors', 'Böl'],
   ['view', 'icon-layers', 'Görünüm'],
@@ -108,6 +108,8 @@ export default class ParselEditor extends Component<ParselEditorProps, EditorSta
   snT?: ReturnType<typeof setTimeout>;
   hT?: ReturnType<typeof setTimeout>;
   lpT?: ReturnType<typeof setTimeout>;
+  /** Last tap (canvas px + time) for double-tap detection. */
+  lastTap: { x: number; y: number; t: number } | null = null;
   /** Target of the 2D/3D toggle (t3d itself animates). */
   want3d = false;
   /** URL sync: ready after the initial state is applied; key of the last URL nav seen. */
@@ -546,6 +548,12 @@ export default class ParselEditor extends Component<ParselEditorProps, EditorSta
       hit: s.empty ? null : s.t3d > 0 ? this.hit3d(p.x, p.y) : this.hit(p.x, p.y, precise),
     };
     if (s.t3d === 0 && s.tool === 'split' && s.split && s.split.pid) {
+      if (this.isDoubleTap(p.x, p.y) && this.parcelDoubleTap(p.x, p.y)) {
+        this.g.type = 'done';
+        return;
+      }
+      // Only presses inside the parcel being split (or on its boundary) place a point; others may pan, and a tap warns.
+      if (!this.inSplitParcel(p.x, p.y, precise)) return;
       this.g.type = 'splitPlace';
       this.splitPlace(p.x, p.y, true);
       return;
@@ -678,12 +686,44 @@ export default class ParselEditor extends Component<ParselEditorProps, EditorSta
     this.setState({ view: { k, x: m0.x - (m0.x - v0.x) * r + (m.x - m0.x), y: m0.y - (m0.y - v0.y) * r + (m.y - m0.y) } });
   }
 
+  /** True when (x, y) completes a double tap (same spot, within 350 ms) begun by an earlier call. */
+  isDoubleTap(x: number, y: number) {
+    const now = performance.now(), l = this.lastTap;
+    const dbl = !!l && now - l.t < 350 && Math.hypot(x - l.x, y - l.y) < 24;
+    this.lastTap = dbl ? null : { x, y, t: now };
+    return dbl;
+  }
+
+  /** Double tap / click on a parcel: leave any tool or background editing and select it in Select/Edit mode. */
+  parcelDoubleTap(x: number, y: number): boolean {
+    const s = this.state;
+    if (s.empty || s.tool === 'draw') return false;
+    let id: string | undefined;
+    if (s.t3d > 0) id = this.hit3d(x, y)?.id;
+    else {
+      const w = this.toWorld(x, y);
+      id = s.parcels.find((p) => pip(w, pts(s.verts, p.ring)))?.id;
+    }
+    if (!id) return false;
+    this.setState((st) => ({ tool: 'select', split: null, addPrev: null, bgEdit: null, menu: null, sel: { type: 'parcel', id: id! }, sheet: st.sheet === 'full' ? 'full' : 'half' }));
+    return true;
+  }
+
+  /** Double tap inside the background edit overlay (it swallows canvas pointer events). */
+  bgDoubleTap = (clientX: number, clientY: number) => {
+    const p = this.local({ clientX, clientY });
+    this.parcelDoubleTap(p.x, p.y);
+  };
+
   tap(g: Gesture) {
     const s = this.state, h = g.hit ?? null;
     if (s.tool === 'draw') {
       this.drawTap(g);
       return;
     }
+    // Split placement checks double taps on press already (see onDown).
+    const placing = s.tool === 'split' && !!s.split?.pid && s.t3d === 0;
+    if (!placing && this.isDoubleTap(g.x0!, g.y0!) && this.parcelDoubleTap(g.x0!, g.y0!)) return;
     if (s.t3d > 0) {
       this.selectHit(h);
       return;
@@ -714,6 +754,10 @@ export default class ParselEditor extends Component<ParselEditorProps, EditorSta
       const e = edgeInfo(s, key)!, V = s.verts, r = segD(this.toWorld(g.x0!, g.y0!), V[e.a], V[e.b]);
       const t = clamp(r.t, 0.05, 0.95);
       this.insertVertex(key, { x: V[e.a].x + (V[e.b].x - V[e.a].x) * t, y: V[e.a].y + (V[e.b].y - V[e.a].y) * t });
+      return;
+    }
+    if (s.tool === 'split' && s.split && s.split.pid) {
+      this.showHint('Bölme çizgisi yalnızca seçili parselin içine yerleştirilebilir');
       return;
     }
     if (s.tool === 'split' && !(s.split && s.split.pid)) {
@@ -792,6 +836,15 @@ export default class ParselEditor extends Component<ParselEditorProps, EditorSta
 
   // ---------- split / add vertex / draw ----------
   /** Places split endpoint: existing vertex within 22 px wins, otherwise nearest edge point. */
+  /** Whether canvas point (x, y) is inside the parcel being split or within touch reach of its boundary. */
+  inSplitParcel(x: number, y: number, precise: boolean) {
+    const s = this.state, par = s.parcels.find((p) => p.id === s.split?.pid);
+    if (!par) return false;
+    const V = s.verts, w = this.toWorld(x, y), tol = (precise ? 12 : 24) / s.view.k;
+    if (pip(w, pts(V, par.ring))) return true;
+    return par.ring.some((a, i) => segD(w, V[a], V[par.ring[(i + 1) % par.ring.length]]).d <= tol);
+  }
+
   splitPlace(x: number, y: number, isDown: boolean) {
     const s = this.state, sp = s.split!, g = this.g!;
     const P = proj(s), V = s.verts, par = s.parcels.find((p) => p.id === sp.pid)!;
@@ -1147,7 +1200,8 @@ export default class ParselEditor extends Component<ParselEditorProps, EditorSta
     })();
 
     const mkTools = (arr: typeof TOOLS): ToolItem[] => arr.map(([id, icon, label]) => {
-      const a = tool === id || (id === 'view' && !!st.menu && st.menu.kind === 'view');
+      // Background edit mode takes over the canvas, so Select shows inactive while it is on.
+      const a = (tool === id && !(id === 'select' && st.bgEdit)) || (id === 'view' && !!st.menu && st.menu.kind === 'view');
       return { id, icon, label, bg: a ? ACC1 : 'transparent', fg: a ? ACC7 : INK, bar: a ? ACC : 'transparent', onClick: () => this.setTool(id) };
     });
     const tools = mkTools(TOOLS), toolsD = mkTools(TOOLS.slice(0, 3));
@@ -1283,7 +1337,7 @@ export default class ParselEditor extends Component<ParselEditorProps, EditorSta
           {bgOn && <BgLayer bg={st.bg!} P={P} cropping={st.bgEdit === 'crop'} />}
           <SceneSvg sc={sc} />
           {bgOn && st.bgEdit && st.t3d === 0 && (
-            <BgHandles bg={st.bg!} view={st.view} mode={st.bgEdit} onChange={(bg) => this.setState({ bg })} onEnd={this.bgGestureEnd} />
+            <BgHandles bg={st.bg!} view={st.view} mode={st.bgEdit} onChange={(bg) => this.setState({ bg })} onEnd={this.bgGestureEnd} onDoubleTap={this.bgDoubleTap} />
           )}
           <MapOverlays sc={sc} ro={ro} />
           {st.empty && tool !== 'draw' && <EmptyState onDraw={this.startDraw} onImport={this.act.importFile} onSample={this.importSample} />}

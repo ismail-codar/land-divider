@@ -85,14 +85,17 @@ function rotate(b0: BgImage, p0: Pt, p: Pt, o: Pt): BgImage {
 }
 
 /** Edit overlay: drag the image to move it; 'move' adds resize corners and a rotate knob, 'crop' adds crop corners + edges. */
-export function BgHandles({ bg, view, mode, onChange, onEnd }: {
+export function BgHandles({ bg, view, mode, onChange, onEnd, onDoubleTap }: {
   bg: BgImage;
   view: View;
   mode: BgEditMode;
   onChange: (bg: BgImage) => void;
   onEnd: (before: BgImage) => void;
+  /** Two quick taps on the image body without dragging (client px). */
+  onDoubleTap?: (clientX: number, clientY: number) => void;
 }) {
-  const g = useRef<{ h: Handle; x0: number; y0: number; o: Pt; b0: BgImage } | null>(null);
+  const g = useRef<{ h: Handle; x0: number; y0: number; o: Pt; b0: BgImage; moved?: boolean } | null>(null);
+  const lastTap = useRef<{ x: number; y: number; t: number } | null>(null);
   const r = rects(bg, view);
   const down = (h: Handle) => (e: RPointerEvent<HTMLDivElement>) => {
     // Keep the canvas from starting a pan / selection under the handles.
@@ -109,12 +112,22 @@ export function BgHandles({ bg, view, mode, onChange, onEnd }: {
   const move = (e: RPointerEvent<HTMLDivElement>) => {
     const s = g.current;
     if (!s) return;
+    if (!s.moved && Math.hypot(e.clientX - s.x0, e.clientY - s.y0) < 5) return;
+    s.moved = true;
     if (s.h === 'rot') onChange(rotate(s.b0, { x: s.x0, y: s.y0 }, { x: e.clientX, y: e.clientY }, s.o));
     else onChange(apply(s.b0, s.h, { x: (e.clientX - s.x0) / view.k, y: (e.clientY - s.y0) / view.k }, mode));
   };
-  const up = () => {
-    if (g.current) onEnd(g.current.b0);
+  const up = (e: RPointerEvent<HTMLDivElement>) => {
+    const s = g.current;
     g.current = null;
+    if (!s) return;
+    onEnd(s.b0);
+    if (s.moved || s.h !== 'body' || e.type !== 'pointerup') return;
+    const now = performance.now(), l = lastTap.current;
+    if (l && now - l.t < 350 && Math.hypot(e.clientX - l.x, e.clientY - l.y) < 24) {
+      lastTap.current = null;
+      onDoubleTap?.(e.clientX, e.clientY);
+    } else lastTap.current = { x: e.clientX, y: e.clientY, t: now };
   };
   const ev = { onPointerMove: move, onPointerUp: up, onPointerCancel: up };
   const box = (h: Handle, x: number, y: number, w: number, hh: number, cursor: string, round?: boolean) => (

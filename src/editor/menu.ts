@@ -68,7 +68,7 @@ export function buildMenu(st: EditorState, kind: MenuKind, act: EditorActions, l
       title: edgeName(st, sel.id),
       items: [
         M('icon-circle-plus', 'Köşe ekle', () => act.startAddVertex(sel.id), { op: lk ? 0.45 : 1 }),
-        M('icon-merge', 'Parselleri birleştir', () => act.askMerge(sel.id), { op: outer ? 0.45 : 1, sub: outer ? 'Dış sınırın tek tarafında parsel var' : '' }),
+        M('icon-trash-2', 'Sınırı sil', () => act.deleteEdge(sel.id), { op: outer || lk ? 0.45 : 1, sub: outer ? 'Dış sınır silinemez' : lk ? 'Kilitli sınır silinemez' : 'İki parsel birleşir · Delete' }),
         M('icon-ruler', 'Sınır uzunlukları', act.toggleLengths, { checked: st.showLengths }),
         M(lk ? 'icon-lock-open' : 'icon-lock', lk ? 'Kilidi aç' : 'Kilitle', () => act.toggleLock(sel.id)),
       ],

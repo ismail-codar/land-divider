@@ -190,7 +190,7 @@ export function buildPanel(
           secondary('icon-ellipsis', '', () => act.openMenu('edge'), 0.35),
         ]
         : [
-          primary('icon-merge', 'Parselleri Birleştir', () => act.askMerge(e.k), 1.6),
+          primary('icon-trash-2', 'Sınırı sil', () => act.deleteEdge(e.k), 1.6),
           secondary('icon-circle-plus', 'Köşe ekle', () => act.startAddVertex(e.k)),
           secondary('icon-ellipsis', '', () => act.openMenu('edge'), 0.35),
         ];

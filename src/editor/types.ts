@@ -133,6 +133,7 @@ export interface EditorActions {
   cancelAddVertex(): void;
   confirmAddVertex(): void;
   removeVertex(id: string): void;
+  deleteEdge(edgeKey: string): void;
   makeCorner(id: string): void;
   pickBg(): void;
   importFile(): void;

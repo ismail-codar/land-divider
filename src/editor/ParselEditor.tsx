@@ -95,6 +95,8 @@ const SHEET_ORDER: SheetLevel[] = ['collapsed', 'half', 'full'];
 const landAreaOf = (st: Pick<EditorState, 'verts' | 'land'>) => Math.abs(sArea(pts(st.verts, st.land)));
 
 export default class ParselEditor extends Component<ParselEditorProps, EditorState> {
+  /** Editor that last got a pointer press; keyboard shortcuts go only to it (the design doc shows several). */
+  static active: ParselEditor | null = null;
   rootRef = createRef<HTMLDivElement>();
   cvRef = createRef<HTMLDivElement>();
   fileRef = createRef<HTMLInputElement>();
@@ -133,6 +135,8 @@ export default class ParselEditor extends Component<ParselEditorProps, EditorSta
 
   // ---------- lifecycle ----------
   componentDidMount() {
+    ParselEditor.active = this;
+    window.addEventListener('keydown', this.onKey);
     this.ro = new ResizeObserver((en) => {
       const r = en[0].contentRect;
       if (!r.width) return;
@@ -177,6 +181,8 @@ export default class ParselEditor extends Component<ParselEditorProps, EditorSta
   componentWillUnmount() {
     this.ro?.disconnect();
     this.cvRef.current?.removeEventListener('wheel', this.onWheel);
+    window.removeEventListener('keydown', this.onKey);
+    if (ParselEditor.active === this) ParselEditor.active = null;
     clearTimeout(this.snT);
     clearTimeout(this.hT);
     clearTimeout(this.lpT);
@@ -443,6 +449,32 @@ export default class ParselEditor extends Component<ParselEditorProps, EditorSta
     this.commit({ ...lc, parcels: ps, sel: null, sheet: 'collapsed' }, 'Köşe kaldırma');
     this.showSnack('Köşe kaldırıldı', 'Geri Al', 'undo');
   }
+
+  /** Deletes a shared boundary by merging the two parcels on its sides. */
+  deleteEdge(key: string) {
+    const s = this.state, e = edgeMap(s)[key];
+    if (!e) return;
+    if (e.ps.length < 2) {
+      this.showHint('Dış sınır silinemez');
+      return;
+    }
+    if (s.locked.includes(key)) {
+      this.showHint('Kilitli sınır silinemez');
+      return;
+    }
+    this.mergeParcels(key);
+  }
+
+  onKey = (e: KeyboardEvent) => {
+    if (ParselEditor.active !== this || e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;
+    const t = e.target as HTMLElement | null;
+    if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+    const sel = this.state.sel;
+    if ((e.key === 'Delete' || e.key === 'Backspace') && sel && sel.type === 'edge' && this.state.t3d === 0) {
+      e.preventDefault();
+      this.deleteEdge(sel.id);
+    }
+  };
 
   mergeParcels(key: string) {
     const s = this.state, e = edgeMap(s)[key];
@@ -1090,6 +1122,7 @@ export default class ParselEditor extends Component<ParselEditorProps, EditorSta
     cancelAddVertex: () => this.setState({ addPrev: null }),
     confirmAddVertex: () => this.confirmAddV(),
     removeVertex: (id) => this.removeVertex(id),
+    deleteEdge: (key) => this.deleteEdge(key),
     makeCorner: (id) => this.makeCorner(id),
     pickBg: () => this.fileRef.current?.click(),
     importFile: () => this.importRef.current?.click(),
@@ -1322,7 +1355,7 @@ export default class ParselEditor extends Component<ParselEditorProps, EditorSta
     const showPanel = L.phone ? sh > 0 : true;
 
     return (
-      <div ref={this.rootRef} style={{ position: 'absolute', inset: 0, overflow: 'hidden', background: BG, color: INK, fontFamily: 'Archivo,system-ui,sans-serif', fontSize: 14, lineHeight: 1.35, WebkitFontSmoothing: 'antialiased', userSelect: 'none', WebkitUserSelect: 'none', WebkitTapHighlightColor: 'transparent' }}>
+      <div ref={this.rootRef} onPointerDownCapture={() => (ParselEditor.active = this)} style={{ position: 'absolute', inset: 0, overflow: 'hidden', background: BG, color: INK, fontFamily: 'Archivo,system-ui,sans-serif', fontSize: 14, lineHeight: 1.35, WebkitFontSmoothing: 'antialiased', userSelect: 'none', WebkitUserSelect: 'none', WebkitTapHighlightColor: 'transparent' }}>
         <div
           ref={this.cvRef}
           onPointerDown={this.onDown}

@@ -2,7 +2,7 @@ import { getRouteApi, Outlet, useNavigate, useParams, useRouter, useRouterState 
 import { useMemo } from 'react';
 import ParselEditor from '../editor/ParselEditor';
 import type { EditorNav } from '../editor/nav';
-import { createLand, renameLand, saveLand } from '../mock/lands';
+import { createLand, renameLand, saveLand } from '../data/lands';
 import { navFromUrl, navToUrl } from './navSearch';
 import { useDevice } from './useDevice';
 import { useNavSync } from './useNavSync';

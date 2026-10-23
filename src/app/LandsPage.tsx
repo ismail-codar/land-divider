@@ -4,7 +4,7 @@ import { ACC, BG, INK, INK2, LINE } from '../editor/constants';
 import Icon from '../editor/components/Icon';
 import { fDn } from '../editor/format';
 import { readImport } from '../editor/io';
-import { createLand } from '../mock/lands';
+import { createLand } from '../data/lands';
 
 const landsApi = getRouteApi('/lands');
 const overline = { fontSize: 12, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: INK2 } as const;
@@ -46,6 +46,9 @@ export default function LandsPage() {
       <div style={{ maxWidth: 560, margin: '0 auto', padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: 24 }}>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <div style={{ ...overline, paddingBottom: 6, borderBottom: '2px solid ' + LINE }}>Arazi listesi</div>
+          {!lands.length && (
+            <div style={{ padding: '16px 0', color: INK2, borderBottom: '1px solid rgba(32,30,29,0.25)' }}>Henüz arazi yok. Yeni bir arazi çizin veya dışa aktarılmış bir PDF'i içe aktarın.</div>
+          )}
           {lands.map((l) => (
             <Link key={l.id} to="/lands/$landId" params={{ landId: l.id }} className="hv-ink05" style={{ display: 'flex', alignItems: 'center', gap: 12, minHeight: 64, borderBottom: '1px solid rgba(32,30,29,0.25)', textDecoration: 'none', color: INK }}>
               <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>

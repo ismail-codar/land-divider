@@ -2,7 +2,7 @@ import { getRouteApi, useNavigate } from '@tanstack/react-router';
 import { useMemo } from 'react';
 import ParselEditor from '../editor/ParselEditor';
 import type { EditorNav } from '../editor/nav';
-import { createLand } from '../mock/lands';
+import { createLand } from '../data/lands';
 import { navFromUrl, navToUrl } from './navSearch';
 import { useDevice } from './useDevice';
 import { useNavSync } from './useNavSync';

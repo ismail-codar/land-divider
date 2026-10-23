@@ -13,7 +13,7 @@ import { validateLandSearch } from './app/navSearch';
 import NewLandPage from './app/NewLandPage';
 import NotFound from './app/NotFound';
 import DocPage from './doc/DocPage';
-import { getLand, listLands } from './mock/lands';
+import { getLand, listLands } from './data/lands';
 
 const rootRoute = createRootRoute({
   component: Outlet,
@@ -48,8 +48,8 @@ const landRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/lands/$landId',
   validateSearch: validateLandSearch,
-  loader: ({ params }) => {
-    const land = getLand(params.landId);
+  loader: async ({ params }) => {
+    const land = await getLand(params.landId);
     if (!land) throw notFound();
     return land;
   },

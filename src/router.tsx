@@ -69,7 +69,12 @@ const routeTree = rootRoute.addChildren([
   landRoute.addChildren([landIndexRoute, parcelRoute]),
 ]);
 
-export const router = createRouter({ routeTree, scrollRestoration: true });
+export const router = createRouter({
+  routeTree,
+  scrollRestoration: true,
+  // GitHub Pages alt dizininde (/land-divider/) çalışabilmesi için Vite `base` değerini kullan.
+  basepath: import.meta.env.BASE_URL,
+});
 
 declare module '@tanstack/react-router' {
   interface Register {
